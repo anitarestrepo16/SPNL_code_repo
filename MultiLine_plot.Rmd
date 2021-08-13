@@ -1,0 +1,35 @@
+---
+title: "Multi-line Plot"
+author: "Anita Restrepo"
+date: "8/12/2021"
+output: html_document
+---
+
+Code to generate a line plot with multiple lines on it from separate linear models.  
+  
+```{r}
+# define relevant regression models:
+lm1 <- lm(DV1 ~ IV1, data = df)
+lm2 <- lm(DV2 ~ IV2, data = df)
+
+ggplot(data = data.frame(x = c(-2, 5), y = c(0, 10)), aes(x = x, y = y)) + # set the limits for the coordinates of the plot according to the ranges of the relevant variables
+  scale_x_continuous(limits = c(-2, 5)) +
+  scale_y_continuous(limits = c(0, 10)) +
+  # First Linear Model
+  geom_abline(intercept = lm1$coefficients[1,1], 
+              slope = lm1$coefficients[2,1], 
+              color = "gray58") + # color for the line for this model
+  # Second Linear Model
+  geom_abline(intercept = lm2$coefficients[1,1], 
+              slope = lm2$coefficients[2,1], 
+              color = "gray15") +
+  labs(x = "IV Label", y = "DV Label") +
+  # text label for First Linear Model
+  annotate("text", x = -0.5, y = 9.5, size = 8, color = "gray58", label = paste0("Past Impact (n.s.)")) +
+  # text label for Second Linear Model
+  annotate("text", x = 2, y = 5.8, size = 8, color = "gray15", label = paste0("Current Impact*")) +
+  # labels are placed manually using the coordinates specified
+  theme_classic() +
+  theme(text = element_text(size = 20))
+```
+

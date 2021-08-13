@@ -1,0 +1,11 @@
+---
+title: "Resources"
+author: "Anita Restrepo"
+date: "8/12/2021"
+output: html_document
+---
+
+A couple resources for coding and stats. Definitely a work in progress, feel free to add any and all useful links/titles/authors.  
+  
+[R for Data Science by Hadley Wickham](https://r4ds.had.co.nz/)  
+Asolutely stellar overview of the most useful elements in the tidyverse tailored for data science. Spans everything from manipulating data to basic text analysis to plotting with ggplot. A great resource for daily coding.  
