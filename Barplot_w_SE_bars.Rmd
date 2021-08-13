@@ -5,6 +5,10 @@ date: "8/12/2021"
 output: html_document
 ---
 
+```{r include = FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
 Create a barplot with Standard Error bars.  
 
 ```{r}
@@ -30,4 +34,5 @@ df %>% filter(!is.na(IV)) %>% # remove NAs in the IV
   annotate("segment", x=1, xend=3, y = 4.5, yend=4.5) +
   annotate("text", label="**", x = 2, y=4.6)
 ```
-
+  
+This is one way to create standard error bars on a plot manually. See the "Violin_plot" file for more information on using stat_summary instead.  

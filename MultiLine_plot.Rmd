@@ -5,6 +5,10 @@ date: "8/12/2021"
 output: html_document
 ---
 
+```{r include = FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
+  
 Code to generate a line plot with multiple lines on it from separate linear models.  
   
 ```{r}

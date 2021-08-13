@@ -1,0 +1,47 @@
+---
+title: "Violin Plot"
+author: "Anita Restrepo"
+date: "8/12/2021"
+output: html_document
+---
+```{r include = FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+Generate a violin plot showing means and distributions for different groups.  
+  
+```{r}
+df %>% filter(!is.na(IV)) %>% # remove NAs in the IV
+  ggplot(aes(x = factor(IV), y = DV)) + # plot the IV (as a factor) vs the DV
+  geom_violin( # create the violin plot
+    color = "gray", # color for the outline of the violins
+    fill = "gray", # color for the fills of the violins
+    scale = "count") + # makes the width of each violin proportional to the sample size of that group
+  theme_classic() +
+  ggtitle("Plot Title") +
+  xlab("IV") + 
+  ylab("DV") +
+  # significance lines with stars (located manually with coordinates)
+  annotate("segment", x=1, xend=4, y = 19, yend=19) +
+  annotate("text", label="***", x = 2.5, y=19.1) +
+  annotate("segment", x=1, xend=3, y = 18, yend=18) +
+  annotate("text", label="**", x = 2, y=18.1) +
+  # create the marking for the mean and the error bars
+  stat_summary(fun.data=mean_sdl, # use the mean_sdl function from the Hmisc package
+               fun.args = c(mult=1), # argument for the mean_sdl function that specifies the number of SDs to calculate
+               geom="pointrange", # determine visual depiction of the error bars (here a dot for the mean with plain lines for the error bars)
+               color="red") # color of the pointrange
+```
+  
+See [here](https://ggplot2.tidyverse.org/reference/stat_summary.html) for a complete reference of stat_summary and especially scroll down for the options available for the summary functions, geoms and great examples. 
+  
+In addition, can also use a custom function:  
+```{r}
+data_summary <- function(x) { # create a function that takes in a set of values
+   m <- mean(x) # computes the mean
+   ymin <- m-sd(x) # computes the mean minus one standard deviation
+   ymax <- m+sd(x) # computes the mean plus one standard deviation
+   return(c(y=m,ymin=ymin,ymax=ymax)) # and returns the three values for plotting the error bars and point for the mean
+}
+```
+

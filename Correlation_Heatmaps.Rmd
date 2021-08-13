@@ -4,7 +4,10 @@ author: "Anita Restrepo"
 date: "8/12/2021"
 output: html_document
 ---
-
+```{r include = FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
+  
 Libraries required:  
 ```{r}
 library(psych)

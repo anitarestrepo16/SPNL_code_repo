@@ -4,6 +4,9 @@ author: "Anita Restrepo"
 date: "8/12/2021"
 output: html_document
 ---
+```{r include = FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
 
 Code to loop through multiple directories, each with multiple txt files, and read each one into a row of a dataframe by subject and then combine them all.  
   
