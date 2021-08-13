@@ -1,0 +1,67 @@
+---
+title: "Correlation Heatmaps"
+author: "Anita Restrepo"
+date: "8/12/2021"
+output: html_document
+---
+
+Libraries required:  
+```{r}
+library(psych)
+library(corrplot)
+```
+
+
+This is one way to generate a correlation heatmap to graphically depict correlations between multiple variables.  
+  
+First create a dataframe with whatever variables you are interested in including:  
+```{r}
+corr_vars <- df %>% select(var1, var2, var3)
+```
+  
+Now calculate relevant stats to depict graphically:  
+```{r}
+# correlation coefficients
+rvalues <- cor(corr_vars, method = "pearson", use="pairwise.complete.obs") # pearson correlations are the default but can change with method = "spearman", "kendall" -- see ?cor() for more info
+
+# significance testing for pairwise correlations
+significance <- corr.test(corr_vars, method = "pearson", adjust="fdr") # can choose adjustment for multiple comparisons (default is no adjustment) -- see ?corr.test()
+
+# p values
+pvalues <- significance$p
+
+# sample sizes for each pairwise comparison
+nvalues <- array(significance$n)
+
+# Set plot parameters, color, and labels
+par(mfrow=c(1,1))
+col4 <- colorRampPalette(c("red","#FF7F00","yellow", "white",
+                           "cyan", "#007FFF","#00007F")) # this selects the colors for the heatmap -- can use any palette desired
+
+```
+  
+Now plot the correlation matrix/heatmap (this is where the corrplot package is required)  
+```{r}
+
+corrplot(rvalues, # the correlation coefficients calculated above
+         p.mat = pvalues, # the p values
+         method="color", # this colors in the squares according to the heatmap palette -- more options available (see ? corrplot())
+         insig = "blank", # this makes sure only significant cells are colored in -- non-significant will be white
+         addCoef.col = "black", # this prints the r value on each cell in black
+         col=rev(col4(100)), # this pulls in the color palette from above to create the heatmap
+         number.cex = 0.5, # this determines the size of the text of the r values
+         tl.col="black", # determines the color of the variable labels on the axes
+         tl.srt=60, # determines the text size of the variable labels on the axes
+         type="upper") # determines whether to show upper or lower half of corr matrix (or can show full)
+
+```
+  
+There are obviously many more ways to generate these plots, and there might be other options that are more appropriate depending on your needs (e.g. flexibility, aesthetics, etc.). Some useful resources:  
+  
+[more info about corrplot options](https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html)  
+  
+[Using Purr and ggplot2](https://towardsdatascience.com/customizable-correlation-plots-in-r-b1d2856a4b05)  
+  
+[Using ggplot2 only](http://www.sthda.com/english/wiki/ggplot2-quick-correlation-matrix-heatmap-r-software-and-data-visualization)  
+  
+  
