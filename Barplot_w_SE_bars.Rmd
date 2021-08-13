@@ -1,0 +1,33 @@
+---
+title: "Bar Plot with SE Bars"
+author: "Anita Restrepo"
+date: "8/12/2021"
+output: html_document
+---
+
+Create a barplot with Standard Error bars.  
+
+```{r}
+df %>% filter(!is.na(IV)) %>% # remove NAs in the IV
+  group_by(factor(IV)) %>% # group by the IV of interest (and make sure R knows it's a factor)
+  # calculate stats necessary to compute the standard error for each level of the IV
+  summarise(mean = mean(DV, na.rm = TRUE), 
+            n = n(),
+            sd = sd(DV, na.rm = TRUE),
+            se = sd/sqrt(n)) %>%
+  # now the actual plot
+  ggplot(aes(x = `factor(IV)`, y = mean)) + # plot the means for each level of the IV
+  geom_bar(stat = "identity") + # make sure the bar plot is plotting what we tell it and not the count
+  ggtitle("Plot Title") +
+  xlab("IV") + 
+  ylab("DV") + 
+  theme(plot.title = element_text(hjust = 0.5)) + # text size for the plot title
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width=0.2) + # use the standard error calculated above for each level of the IV and plot as error bars (+/- 1 SE)
+  theme_classic() +
+  # add significance bars with stars -- placed manually on plot with coordinates
+  annotate("segment", x=1, xend=4, y = 5, yend=5) +
+  annotate("text", label="***", x = 2.5, y=5.1) +
+  annotate("segment", x=1, xend=3, y = 4.5, yend=4.5) +
+  annotate("text", label="**", x = 2, y=4.6)
+```
+
