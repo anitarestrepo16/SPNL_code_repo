@@ -1,0 +1,36 @@
+---
+title: "Outlier Code"
+author: "Emily Silver"
+date: "8/23/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+## outlier check for PHQ in dataset called "predep"
+
+# visualize outliers (if you want)...note that this uses interquartile range so is more conservative than this 3SD approach
+boxplot(predep$PHQ,outcol="red")
+
+# count NAs before removing outliers (to compare afterwards)
+sum(is.na(predep$PHQ))
+
+# 3 SD above mean is called PHQ.upper for upper limit
+PHQ.upper<-3*sd(predep$PHQ,na.rm=T)+mean(predep$PHQ,na.rm=T)
+
+# 3 SD below mean is called PHQ.lower for lower limit
+PHQ.lower<-mean(predep$PHQ,na.rm=T)-3*sd(predep$PHQ,na.rm=T)
+
+## identify which participants values are outliers, call this list "PHQ.out"
+PHQ.out<-predep$PHQ[which(predep$PHQ > PHQ.upper | predep$PHQ < PHQ.lower)]
+
+## you can also use PHQ.out to count the # of outliers 
+length(PHQ.out)
+
+## replace outliers with NA
+predep[predep$PHQ %in% PHQ.out, "PHQ"] = NA
+
+# count NAs now that you added outliers
+sum(is.na(predep$PHQ))
+
+## visualize if outliers are still present- but they will be interquartile range outliers so don't necessarily need to worry about them
+boxplot(predep$PHQ,outcol="red")
