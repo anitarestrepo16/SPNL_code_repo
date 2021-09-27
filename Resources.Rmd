@@ -28,14 +28,23 @@ Has some good stuff for learning to use github with R. A bit too detailed and in
   
 These are mainly from Karen Smith.  
   
+[Nice visualization to help understand](http://mfviz.com/hierarchical-models/)
+  
+## Tutorials  
 [Longitudinal Analysis with lme](https://rpsychologist.com/r-guide-longitudinal-lme-lmer)  
   
 [Linear mixed effects models in R](https://pagepiccinini.com/r-course/lesson-6-part-1-linear-mixed-effects-models/)  
   
+[lme4 Tutorial](nsvandeschoot.com/tutorials/lme4/)  
+  
+[Another lme4 Tutorial](http://www.rensenieuwenhuis.nl/r-sessions-16-multilevel-model-specification-lme4/)
+  
+## Articles  
 [A paper on HLM](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3131138/)  
   
+## Books  
 [Applied Longitudinal Analysis Book](https://www.amazon.com/Applied-Longitudinal-Data-Analysis-Occurrence/dp/0195152964)  
-Highly recommended by Karen  
+Highly recommended by Karen and has [accompanying R code](https://stats.idre.ucla.edu/other/examples/alda/)
   
 [Raudenbush's Book on HLM](https://www.amazon.com/Hierarchical-Linear-Models-Applications-Quantitative/dp/076191904X)  
   
