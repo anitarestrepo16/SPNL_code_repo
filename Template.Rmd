@@ -1,0 +1,25 @@
+---
+title: "Correlation Heatmaps"
+author: "Anita Restrepo"
+date: "`r format(Sys.time(), '%b %d, %Y')`"
+output: html_document
+---
+  
+  
+This is the template markdown file for any new code you want to include in this repository. Make sure to give it an informative and concise title when you duplicate it.  
+  
+```{r include = FALSE}
+# ensures none of the code chunks are actually run (because non-functional
+# code snippets will not allow for knitting)
+knitr::opts_chunk$set(eval = FALSE)
+```
+  
+Libraries required:  
+```{r}
+library()
+library()
+```
+
+
+Include a detailed description of the purpose of the code as well as detailed annotations explaining each line of code. Also add any external references if relevant and any other comments. The more info the better!    
+  
