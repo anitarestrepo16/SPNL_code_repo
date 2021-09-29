@@ -356,8 +356,8 @@ pre code {
 
 
 <p>A couple resources for coding and stats. Definitely a work in progress, feel free to add any and all useful links/titles/authors.</p>
-<div id="general-resources" class="section level1">
-<h1>General Resources</h1>
+<div id="general-r-resources" class="section level1">
+<h1>General R Resources</h1>
 <p><a href="https://r4ds.had.co.nz/">R for Data Science by Hadley Wickham</a><br />
 Asolutely stellar overview of the most useful elements in the tidyverse tailored for data science. Spans everything from manipulating data to basic text analysis to plotting with ggplot. A great resource for daily coding.</p>
 <p><a href="https://www.datanovia.com/en/">Datanovia website (Alboukadel Kassambara)</a><br />
@@ -386,9 +386,11 @@ Has some good stuff for learning to use github with R. A bit too detailed and in
 </div>
 <div id="books" class="section level2">
 <h2>Books</h2>
-<p><a href="https://www.amazon.com/Applied-Longitudinal-Data-Analysis-Occurrence/dp/0195152964">Applied Longitudinal Analysis Book</a><br />
+<p><a href="https://www.amazon.com/Applied-Longitudinal-Data-Analysis-Occurrence/dp/0195152964">Applied Longitudinal Analysis Book by Singer &amp; Willett</a><br />
 Highly recommended by Karen and has <a href="https://stats.idre.ucla.edu/other/examples/alda/">accompanying R code</a></p>
 <p><a href="https://www.amazon.com/Hierarchical-Linear-Models-Applications-Quantitative/dp/076191904X">Raudenbush’s Book on HLM</a></p>
+<p><a href="https://www.amazon.com/Multilevel-Analysis-Quantitative-Methodology-Joop/dp/1138121363/ref=sr_1_1?crid=1VJNDMC84Y5Z4&amp;dchild=1&amp;keywords=multilevel+analysis+techniques+and+applications+hox&amp;qid=1632942870&amp;s=books&amp;sprefix=multilevel+analysis+%2Cstripbooks%2C190&amp;sr=1-1">Multilevel Analysis by Joop Hox</a><br />
+I originally read the first edition so this one should be better and also has more authors on it.</p>
 </div>
 </div>
 <div id="resources-about-power" class="section level1">
@@ -397,6 +399,18 @@ Highly recommended by Karen and has <a href="https://stats.idre.ucla.edu/other/e
 <p><a href="https://www.frontiersin.org/articles/10.3389/fpsyg.2019.01067/full#T2" class="uri">https://www.frontiersin.org/articles/10.3389/fpsyg.2019.01067/full#T2</a></p>
 <p><a href="http://www.stats.ox.ac.uk/~snijders/PowerSampleSizeMultilevel.pdf" class="uri">http://www.stats.ox.ac.uk/~snijders/PowerSampleSizeMultilevel.pdf</a></p>
 <p><a href="https://www.tandfonline.com/doi/full/10.1080/19345747.2011.618213" class="uri">https://www.tandfonline.com/doi/full/10.1080/19345747.2011.618213</a></p>
+</div>
+<div id="jspsych-resources" class="section level1">
+<h1>jsPsych Resources</h1>
+<p><a href="https://www.jspsych.org/">jsPsych Website from Creators</a><br />
+Good place to start, contains basic tutorials and explanations of what it is and how it works.</p>
+<p><a href="https://www.movingresearchonline.info/">Moving Research Online Tutorials</a><br />
+Originally a workshop run in 2020 to help researchers move research online during the pandemic, links to the videos of the webinars that walk through creating and running experiments using jsPsych. A good second step after looking through their website (and maybe getting familiar with javascript and html).</p>
+<p><a href="https://kywch.github.io/jsPsych-in-Qualtrics/">Kyoung’s Tutorial for Embedding jsPsych into Qualtrics</a><br />
+INVALUABLE resource for integrating jspsych tasks into qualtrics. Kyoung is an ex-postdoc in Marc Berman’s lab and has, in the past, been responsive to email inquiries but is NOT going to teach from scratch so do your research before contacting him!</p>
+<ul>
+<li>Small annotation to his tutorial: if embedding multiple jsPsych tasks into the same qualtrics survey, make sure that when the display stage and display stage background are being removed you include a hashtag in front of the name when calling them. In other words, it should read <code>jQuery('#display_stage').remove()</code> instead of <code>jQuery('display_stage').remove()</code>. I mention this because both are used in the tutorial in different sections.</li>
+</ul>
 </div>
 
 
