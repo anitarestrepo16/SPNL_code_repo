@@ -1,0 +1,36 @@
+---
+title: "CFA"
+author: "Anita Restrepo"
+date: "`r format(Sys.time(), '%b %d, %Y')`"
+output: html_document
+---
+  
+```{r include = FALSE}
+# ensures none of the code chunks are actually run (because non-functional
+# code snippets will not allow for knitting)
+knitr::opts_chunk$set(eval = FALSE)
+```
+  
+Libraries required:  
+```{r}
+library(lavaan)
+```
+
+This inelegant and rudimentary code runs confirmatory factor analyses using the lavaan package.  
+  
+This was originally done on the Internet Addiction Test (IAT) and so the individual questionnaire items are labelled IAT_itemNumber.  
+```{r}
+# tell R what the structure of the factor analysis is (i.e. how many factors and what items go into which factor):
+CFA_model <- 
+  'F1 =~ IAT_03 + IAT_04 + IAT_05 + IAT_09 + IAT_13 + IAT_15 + IAT_18 + IAT_19 + IAT_20
+  F2 =~ IAT_01 + IAT_06 + IAT_08 + IAT_16 + IAT_17
+  F3 =~ IAT_10 + IAT_12 + IAT_14' 
+# the model above includes three factors (F1, F2, F3) which each include the relevant items
+
+# actually fit the model on the dataframe of interest (here called IAT):
+fit <- cfa(IAT_confirmatory_1, data = IAT, std.lv=TRUE)
+
+# see the output of the model fit including measures of goodness of fit
+summary(fit, fit.measures=TRUE)
+```
+

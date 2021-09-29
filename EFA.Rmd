@@ -1,0 +1,71 @@
+---
+title: "EFA"
+author: "Anita Restrepo"
+date: "`r format(Sys.time(), '%b %d, %Y')`"
+output: html_document
+---
+  
+```{r include = FALSE}
+# ensures none of the code chunks are actually run (because non-functional
+# code snippets will not allow for knitting)
+knitr::opts_chunk$set(eval = FALSE)
+```
+  
+Libraries required:  
+```{r}
+library(paran)
+```
+
+This code for exploratory factor analysis (EFA) is very badly documented (sorry but I can't remember what each line does eek) but should be a decent starting point!   
+  
+This was originally done on the Internet Addiction Test (IAT) and so the individual questionnaire items are labelled IAT_itemNumber. The dataframe called IAT_Items includes the item-level responses for all participants for all items of the IAT WITHOUT the Subject ID or any other variables that could confuse the EFA.    
+  
+This code doesn't specify how many factors to retain:  
+```{r}
+fa.parallel(IAT_Items, fa = "fa", cor = "poly") 
+# fa specifies factor analysis instead of principal component analysis (PCA)
+# poly specifies variables are categorical
+```
+  
+This code runs an EFA retaining 3 factors:  
+```{r}
+fa.poly(IAT_Items, nfactors = 3)
+```
+  
+This code runs a parallel analysis to see how many factors SHOULD be retained:  
+```{r}
+paran(IAT_Items,
+      iterations = 10000, # for bootstrapping
+      centile = 95,
+      quietly = FALSE, 
+      status = TRUE,
+      all = TRUE,
+      cfa = TRUE,
+      graph = TRUE,
+      color = TRUE, 
+      col = c("black", "red", "blue"),
+      lty = c(1, 2, 3),
+      lwd = 1, 
+      legend = TRUE, 
+      file = "", 
+      width = 640, 
+      height = 640, 
+      grdevice = "png", 
+      seed = 0)
+```
+  
+This also produces a scree plot (I think).  
+  
+This code seems to be another way to run the parallel analysis (?):  
+```{r}
+# run a principal components analysis
+PCA <- princomp(IAT_Items)
+
+# generate a scree plot
+plot(PCA, main = "Scree Plot") 
+
+# based on the scree plot, run the EFA retaining 7 factors
+# with varimax rotation
+factanal(IAT_Items, factors = 7, rotation = "varimax") 
+```
+
