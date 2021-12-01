@@ -24,6 +24,11 @@ Great reference for the more specific and uncommon details of R Markdown.
 [Happy Git with R by Jenny Bryan](http://happygitwithr.com)  
 Has some good stuff for learning to use github with R. A bit too detailed and in-depth for our needs I think but still a good resource to have!  
   
+# Resources About Regression/ANOVA  
+  
+[Repeated Measures and Mixed Models](https://m-clark.github.io/docs/mixedModels/anovamixed.html)  
+A great discussion, with examples, of the parallels between regression and ANOVA, specifically focused on repeated measures analysis.  
+  
 # HLM Resources  
   
 These are mainly from Karen Smith.  
