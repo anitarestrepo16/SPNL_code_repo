@@ -5,7 +5,7 @@ date: "8/23/2021"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r, eval = FALSE}
 ## outlier check for PHQ in dataset called "predep"
 
 # visualize outliers (if you want)...note that this uses interquartile range so is more conservative than this 3SD approach
