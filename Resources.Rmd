@@ -29,6 +29,9 @@ Has some good stuff for learning to use github with R. A bit too detailed and in
 [Repeated Measures and Mixed Models](https://m-clark.github.io/docs/mixedModels/anovamixed.html)  
 A great discussion, with examples, of the parallels between regression and ANOVA, specifically focused on repeated measures analysis.  
   
+[PLotting Interaction Effects for Regression](https://cran.r-project.org/web/packages/sjPlot/vignettes/plot_interactions.html)  
+Great vignette on how to plot 2- and 3-way interactions for regression using the sjPlot package.  
+  
 # HLM Resources  
   
 These are mainly from Karen Smith.  
