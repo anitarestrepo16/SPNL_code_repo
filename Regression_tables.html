@@ -384,6 +384,37 @@ Result_table_name &lt;- data.frame(my_coefs, my_CI_1, my_CI_2, my_ps, row.names 
 colnames(Result_table_name) &lt;- c(&quot;B&quot;, &quot;2.5% CI&quot;, &quot;97.5% CI&quot;, &quot;p value&quot;)
 rownames(Result_table_name) &lt;- c(&quot;Predictor 1&quot;, &quot;Predictor 2&quot;, &quot;Predictor 3&quot;)
 write.csv(Result_table_name, file = &quot;Tables/Result_table_name.csv&quot;)</code></pre>
+<p>Update 2/23/22: The above code doesn’t capitalize on the tidyverse and is much dirtier than one would like so here is some nicer, tidyer code to achieve similar results. It won’t produce the same tables but is more easily modified to suit more flexible needs.</p>
+<p>For this code below, the function was made to simultaneously loop through two sets of variables to include a corresponding pair of variables as predictors in the same model. Can be modified to only loop through one set of variables or more than two.</p>
+<p>Variable explanations:<br />
+- dat: the dataframe where the data lives<br />
+- items: one set of predictors (i.e. column names) to loop through<br />
+- intensities: a corresponding set of predictors to loop through (must be the same length as items)<br />
+- questionnaire: a single outcome variable for the regression models. Needs to be inputted into the function in the form of a string (e.g. “CESD_Total”)</p>
+<pre class="r"><code>reg_by_item &lt;- function(dat, items, intensities, questionnaire) {
+  regs &lt;- data.frame() # create empty dataframe to populate inside for loop
+  for (i in 1:length(items)) { # loop through the number of elements in the &quot;items&quot; vector
+    red_df &lt;- dat %&gt;% select(questionnaire, items[i], intensities[i]) # create a reduced dataframe (red_df) that only contains our variables of interest
+    red_df$endorsal &lt;- ifelse(red_df[,2] &gt; 1, 1, 0) # optional and specific to this data (creating new variable)
+    DV &lt;- questionnaire # for inclusion in final dataframe
+    mod &lt;- summary(lm(red_df[,1] ~ red_df[,4]*red_df[,3])) # run the model and call summary to extract stats
+    reg &lt;- data.frame(DV = c(DV, DV, DV, DV), # include the DV as many times as number of coefficients in your model output
+                      coefficient = c(&quot;Intercept&quot;, items[i], intensities[i], &quot;interaction&quot;), # label for each coefficient
+                      mod$coefficients, row.names = NULL) # extract betas, standard errors, t-vals and p-vals
+    regs &lt;- rbind(regs, reg) # populate the output dataframe
+  }
+return(regs)  
+}
+
+# vector to pass into function for the &quot;items&quot; argument
+bleep &lt;- c(&quot;ACES_1&quot;, &quot;ACES_2&quot;, &quot;ACES_3&quot;, &quot;ACES_4&quot;, &quot;ACES_5&quot;, &quot;ACES_6&quot;, &quot;ACES_7&quot;, &quot;ACES_8&quot;, &quot;ACES_9&quot;, &quot;ACES_10&quot;)
+# vector to pass into function for the &quot;intensities&quot; argument
+bloop &lt;- c(&quot;ACES_I_1&quot;, &quot;ACES_I_2&quot;, &quot;ACES_I_3&quot;, &quot;ACES_I_4&quot;, &quot;ACES_I_5&quot;, &quot;ACES_I_6&quot;, &quot;ACES_I_7&quot;, &quot;ACES_I_8&quot;, &quot;ACES_I_9&quot;, &quot;ACES_I_10&quot;)
+
+# create three dataframes containing the outputs for the regressions for three deffierent DVs
+Lon_CTQ &lt;- reg_by_item(df, bleep, bloop, &quot;Lon_Total&quot;)
+CESD_CTQ &lt;- reg_by_item(df, bleep, bloop, &quot;CESD_Total&quot;)
+PSS_CTQ &lt;- reg_by_item(df, bleep, bloop, &quot;PSS_Total&quot;)</code></pre>
 
 
 

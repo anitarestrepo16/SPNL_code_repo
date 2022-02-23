@@ -40,4 +40,40 @@ colnames(Result_table_name) <- c("B", "2.5% CI", "97.5% CI", "p value")
 rownames(Result_table_name) <- c("Predictor 1", "Predictor 2", "Predictor 3")
 write.csv(Result_table_name, file = "Tables/Result_table_name.csv")
 ```
+  
+Update 2/23/22: The above code doesn't capitalize on the tidyverse and is much dirtier than one would like so here is some nicer, tidyer code to achieve similar results. It won't produce the same tables but is more easily modified to suit more flexible needs.  
+  
+For this code below, the function was made to simultaneously loop through two sets of variables to include a corresponding pair of variables as predictors in the same model. Can be modified to only loop through one set of variables or more than two.  
+  
+Variable explanations:  
+- dat: the dataframe where the data lives  
+- items: one set of predictors (i.e. column names) to loop through  
+- intensities: a corresponding set of predictors to loop through (must be the same length as items)  
+- questionnaire: a single outcome variable for the regression models. Needs to be inputted into the function in the form of a string (e.g. "CESD_Total")  
+```{r}
+reg_by_item <- function(dat, items, intensities, questionnaire) {
+  regs <- data.frame() # create empty dataframe to populate inside for loop
+  for (i in 1:length(items)) { # loop through the number of elements in the "items" vector
+    red_df <- dat %>% select(questionnaire, items[i], intensities[i]) # create a reduced dataframe (red_df) that only contains our variables of interest
+    red_df$endorsal <- ifelse(red_df[,2] > 1, 1, 0) # optional and specific to this data (creating new variable)
+    DV <- questionnaire # for inclusion in final dataframe
+    mod <- summary(lm(red_df[,1] ~ red_df[,4]*red_df[,3])) # run the model and call summary to extract stats
+    reg <- data.frame(DV = c(DV, DV, DV, DV), # include the DV as many times as number of coefficients in your model output
+                      coefficient = c("Intercept", items[i], intensities[i], "interaction"), # label for each coefficient
+                      mod$coefficients, row.names = NULL) # extract betas, standard errors, t-vals and p-vals
+    regs <- rbind(regs, reg) # populate the output dataframe
+  }
+return(regs)  
+}
 
+# vector to pass into function for the "items" argument
+bleep <- c("ACES_1", "ACES_2", "ACES_3", "ACES_4", "ACES_5", "ACES_6", "ACES_7", "ACES_8", "ACES_9", "ACES_10")
+# vector to pass into function for the "intensities" argument
+bloop <- c("ACES_I_1", "ACES_I_2", "ACES_I_3", "ACES_I_4", "ACES_I_5", "ACES_I_6", "ACES_I_7", "ACES_I_8", "ACES_I_9", "ACES_I_10")
+
+# create three dataframes containing the outputs for the regressions for three deffierent DVs
+Lon_CTQ <- reg_by_item(df, bleep, bloop, "Lon_Total")
+CESD_CTQ <- reg_by_item(df, bleep, bloop, "CESD_Total")
+PSS_CTQ <- reg_by_item(df, bleep, bloop, "PSS_Total")
+
+```
