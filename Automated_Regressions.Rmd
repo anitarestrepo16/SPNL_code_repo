@@ -1,5 +1,5 @@
 ---
-title: "Regression Tables"
+title: "Automated Regressions "
 author: "Anita Restrepo"
 date: "8/12/2021"
 output: html_document
@@ -7,7 +7,9 @@ output: html_document
 ```{r include = FALSE}
 knitr::opts_chunk$set(eval = FALSE)
 ```
-
+  
+# Method 1  
+  
 This code is meant to automate the process of running regressions and pulling out relevant stats into tables to then be able to move them out of R easily.  
   
 Run multiple regressions on various variables of interest within a dataframe and return a results table in csv format
@@ -43,6 +45,8 @@ write.csv(Result_table_name, file = "Tables/Result_table_name.csv")
   
 Update 2/23/22: The above code doesn't capitalize on the tidyverse and is much dirtier than one would like so here is some nicer, tidyer code to achieve similar results. It won't produce the same tables but is more easily modified to suit more flexible needs.  
   
+# Method 2  
+  
 For this code below, the function was made to simultaneously loop through two sets of variables to include a corresponding pair of variables as predictors in the same model. Can be modified to only loop through one set of variables or more than two.  
   
 Variable explanations:  
@@ -77,3 +81,46 @@ CESD_CTQ <- reg_by_item(df, bleep, bloop, "CESD_Total")
 PSS_CTQ <- reg_by_item(df, bleep, bloop, "PSS_Total")
 
 ```
+  
+# Method 3  
+This method takes a vector of the names of predictors and runs regressions (in this case HLMs) with all possible combinations of said predictors. Two separate functions below for including 2 and 3 predictors in the model. Can expand to 4+. Outputs a list with chi-square tests (specific to HLMs, can modify to `summary` for `lm`) for each model as a separate item.     
+  
+Only kink is that the outputs come out without the relevant predictor names so need to use the last bit of code to cross-reference the models.  
+```{r}
+qs <- c("CESD_score_centered", "Rosenberg_score_centered", "LSAS_score_centered", "BAI_score_centered")
+
+reg_by_2 <- function(dat, predictors) {
+  combs_2 <- combn(predictors, 2)
+  anovas_2 <- list()# create empty list to populate inside for loop
+  for (i in 1:ncol(combs_2)) { # loop through the number of columns in the combinations list
+    #IV1 <- combs_2[1,i]
+    #IV2 <- combs_2[2,i]
+    mod <- lmer(cyber_total ~ cyberball_condition*cyber_session*UCLA_score_centered + dat[[combs_2[1,i]]] + dat[[combs_2[2,i]]] + (1 + cyber_session|Subject), data = dat, REML = F) # run the model
+    stars <- Anova(mod, type = 3)
+    anovas_2[[i]] <- stars
+  }
+  return(anovas_2)
+}
+
+reg_by_3 <- function(dat, predictors) {
+  combs_3 <- combn(predictors, 3)
+  anovas_3 <- list() # create empty list to populate inside for loop
+  for (i in 1:ncol(combs_3)) { # loop through the number of columns in the combinations list
+    IV1 <- combs_3[1,i]
+    IV2 <- combs_3[2,i]
+    IV3 <- combs_3[3,i]
+    mod <- lmer(cyber_total ~ cyberball_condition*cyber_session*UCLA_score_centered + dat[[IV1]] + dat[[IV2]] + dat[[IV3]] + (1 + cyber_session|Subject), data = dat, REML = F) # run the model
+    stars <- Anova(mod, type = 3)
+    anovas_3[[i]] <- stars
+  }
+  return(anovas_3)
+}
+
+regs_w_2 <- reg_by_2(df_post_cyber, qs)
+regs_w_3 <- reg_by_3(df_post_cyber, qs)
+# use these to cross-reference with output lists to see what predictors are where
+combn(qs, 2)
+combn(qs, 3)
+```
+
+  
