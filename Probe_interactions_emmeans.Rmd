@@ -1,0 +1,69 @@
+---
+title: "Probe Model Interactions with emmeans"
+author: "Anita Restrepo"
+date: "`r format(Sys.time(), '%b %d, %Y')`"
+output: html_document
+---
+  
+  
+This code is courtesy of the wonderful Karen Smith. It uses the emmeans package to probe 2- and 3-way interactions in models, mainly HLMs. There are other things that could be done with this pakage but these are some of the basics needed for reporting.    
+  
+```{r include = FALSE}
+# ensures none of the code chunks are actually run (because non-functional
+# code snippets will not allow for knitting)
+knitr::opts_chunk$set(eval = FALSE)
+```
+  
+Libraries required:  
+```{r}
+library(nlme4)
+library(emmeans)
+```
+  
+# The Model  
+The model with the interactions (in this case a 2-level HLM run with the lme4 package):  
+  
+The cyberball_condition variable is categorical with three levels.  
+The cyber_session variable only has 5 values (1-5) but is being treated as numeric here.  
+```{r}
+model <- lmer(cyber_total ~ cyberball_condition*cyber_session*UCLA_score + (1 + cyber_session|Subject), data = dat, REML = FALSE)
+```
+  
+# Compare Intercepts  
+To run contrasts between the different levels of the categorical cyberball_condition comparing whether the **intercepts** for each condition are the same:   
+  
+```{r}
+pairs(emmeans(model, "cyberball_condition"), adjust = NULL)
+```
+  
+# Probe 2-way interaction  
+To run contrasts between the different levels of the categorical cyberball_condition comparing whether the **slopes** (i.e. the effect of cyber_session) differs between the levels:  
+  
+```{r}
+emtrends(model, pairwise~cyberball_condition, var = "cyber_session")
+```
+Note: the p-values in this output determine whether the conditions are significantly different from each other, *not* whether the slopes are significantly different from zero.  
+  
+To see whether the estimates (i.e. the betas) for the slopes are significantly different from zero:  
+```{r}
+test_betas <- emtrends(model, ~cyberball_condition, var = "cyber_session", 
+         at=c(list(cyber_session = seq(1, 5))), options = list())
+summary(test_betas, infer=c(TRUE,TRUE), null=0)
+```
+Note: here, we include `seq(1, 5)` because we are testing the slopes across the full range of values for the cyber_session variable.  
+  
+# Probe 3-way interaction  
+Because we can't run contrasts between the conditions, the only thing we can do (apart from plotting, v important) is run significance tests for the betas at multiple combinations of values for the interacting variables.  
+```{r}
+UCLA.high <- M + SD
+UCLA.low <- M - SD
+
+trends <- emtrends(model, ~cyberball_condition*UCLA_score, var = "cyber_session", 
+         at=c(list(cyber_session = seq(1, 5)), list(UCLA_score = c(UCLA.low, UCLA.high))), options = list())
+summary(trends, infer=c(TRUE,TRUE), null=0)
+```
+Note: We use the full range (i.e. `seq(1, 5)`) for the cyber_session variable in order to get the slopes (i.e. trends) and +/- 1 SD for the UCLA variable, which is numerical and continuous. Because cyberball_condition is categorical (i.e. coded as a factor), emtrends will compute a beta estimate for each condition at both +1SD and -1SD for the UCLA variable and run a significance test on each estimate.  
+  
+
+
+  
