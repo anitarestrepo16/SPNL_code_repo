@@ -59,6 +59,13 @@ Highly recommended by Karen and has [accompanying R code](https://stats.idre.ucl
 [Multilevel Analysis by Joop Hox](https://www.amazon.com/Multilevel-Analysis-Quantitative-Methodology-Joop/dp/1138121363/ref=sr_1_1?crid=1VJNDMC84Y5Z4&dchild=1&keywords=multilevel+analysis+techniques+and+applications+hox&qid=1632942870&s=books&sprefix=multilevel+analysis+%2Cstripbooks%2C190&sr=1-1)  
 I originally read the first edition so this one should be better and also has more authors on it.  
   
+## Visualizing and Reporting Results  
+[Options for Tables on Markdown](https://www.anthonyschmidt.co/post/2020-09-06-table-options-mlm/)  
+Goes through a couple different packages for making tables specifically for HLMs.  
+ 
+[Visualizing and Getting Model Info](https://strengejacke.github.io/sjPlot/)  
+Absolutely fantastic for visualizing effects and essential for probing interactions.  
+  
 # Resources About Power  
   
 Also from Karen Smith.  
