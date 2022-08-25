@@ -1,0 +1,193 @@
+---
+title: 'STAT 220: Homework X'
+author: "Your Name Goes Here"
+fontsize: 11pt
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+header-includes: \usepackage{pdfpages}
+geometry: margin=0.75in
+fig_crop: no
+---
+
+```{r setup, include=FALSE}
+library(MASS)
+library(mosaic)
+library(knitr)
+library(broom)
+options(width=70, digits=6, scipen=8)
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+# Set R output size a bit smaller than default
+opts_chunk$set(size='small') 
+# Set the default to NOT display R code
+opts_chunk$set(echo=FALSE) 
+
+# Every HW R Markdown document should begin with all the lines of code above.
+
+# Note: This green text is not displayed in the final document 
+# because the default for displaying R code and R comments is echo=FALSE.
+```
+
+
+This is an R Markdown document.    
+For HW, we strongly recomment you "Knit" to PDF (not Word, not HTML).
+
+The following is just a template.   
+It's not related to any specific HW assignment
+
+# Q1
+This is question 1,
+
+## (a)
+which has a part (a)
+
+## (b)
+then part (b)
+
+## (c)
+and finally part (c)
+
+# Q2
+the next question is 2.
+
+## (a)
+It only has a part (a)
+
+## (b)
+and a part (b).
+
+# Q3
+
+Now, I'm just going to do a bunch of stuff in R Markdown that you
+can use for ideas for formatting your work.
+
+## (a)
+Some of this I borrowed from the R Markdown (by RStudio) tutorial:   
+[http://rmarkdown.rstudio.com/lesson-1.html](http://rmarkdown.rstudio.com/lesson-1.html).
+
+## (b)
+End a line with two spaces  
+to start a new line. Plus, these two -- words are separated by a long dash.
+
+Here is the start of the next paragraph where
+**this text is bold,** whereas *this text is in italics*.
+You can even ~~strikethrough text~~, although I can't think why you would need to.
+
+> A long quote starts with a greater than sign and gets indented on both sides.  Well, only until you hit return to start a new line.  I think I'll just repeat that to demonstrate a long quote.  A long quote starts with a greater than sign and gets indented on both sides.  Well, only until you hit return to start a new line.
+
+Finally, the quote is finished!
+
+# Q4
+
+## (a)
+Here is an itemized list.
+Leave a blank line before the list.
+Indent using at least 4 spaces.
+
+* item 1
+* item 2
+    + sub-item 1
+    + sub-item 2
+* item 3
+    + sub-item 1
+    
+## (b)
+
+Here is an ordered list.
+Leave a blank line before the list.
+Indent using at least 4 spaces.
+
+1. item 1
+2. item 2
+    a. sub-item 1
+    b. sub-item 2
+3. item 3
+    a. sub-item 1
+    
+# Q5 
+
+## (a)
+
+In R, I am assigning the number 4 to the variable `x`. 
+...but you can't see that because the default is to **NOT** show R code.
+
+The R chunk starts below.
+```{r}
+x <- 4
+```
+...and ends above.
+
+## (b)
+
+Here is a table (and I'll ask R display the values of `x` and `x^2` for me too).
+To display values of R variables, type back-tick `r` (` `r`), then a space, then the variable name
+(or a formula operating on the variable), then end it with another back-tick ` ` `.
+
+Table Header  | Second Header
+------------- | -------------
+Table Cell 1  | Cell 2
+Cell 3        | Cell 4
+$x = `r x`$       | $x^2= `r x^2`$
+
+You can even line-up the text in your tables as you like.
+
+Centered | Right-Justified | Left-Justified
+:-------:|----------------:|:----------------
+A        | 24              |  My Friend's Name
+B        |  5              |  My Name
+CC       | 167             |  Firstname Lastname
+DDD      | 48              |  Another Name
+
+# Q6
+
+## (a)
+
+Here are some plots where I don't display the R code.
+You might notice that my plots get cropped.
+
+```{r}
+data(iris)
+hist(iris$Petal.Length, nclass = 20)
+plot(iris$Petal.Width, iris$Petal.Length)
+```
+
+Here, you can resize your plots by adjusting `fig.width` 
+and `fig.height` in the code chunk.
+
+```{r fig.width=4, fig.height=4}
+hist(iris$Petal.Length, nclass = 20)
+plot(iris$Petal.Width, iris$Petal.Length)
+```
+
+...and you can center, right-justify, or left-justify (default) your graphic.
+
+```{r fig.width=4, fig.height=4, fig.align='center'}
+plot(iris$Petal.Width, iris$Petal.Length)
+```
+
+```{r fig.width=4, fig.height=4, fig.align='right'}
+plot(iris$Petal.Width, iris$Petal.Length)
+```
+
+```{r fig.width=4, fig.height=4}
+plot(iris$Petal.Width, iris$Petal.Length)
+```
+
+## (b)
+
+Now, here are two plots placed side-by-side.
+
+```{r echo=TRUE, fig.width=4, fig.height=4, fig.show='hold', out.width=c('45%', '45%')}
+hist(iris$Petal.Length, nclass = 20)
+plot(iris$Petal.Width, iris$Petal.Length)
+```
+
+Of course, I would comment on the plots right here so I 
+get credit for them on my homework.
+

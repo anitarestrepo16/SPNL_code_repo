@@ -1,0 +1,244 @@
+---
+title: 'Stat 224: Homework 4'
+author: "Anita Restrepo"
+date: "10/25/2020"
+fontsize: 11pt
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+header-includes: \usepackage{pdfpages}
+geometry: margin=0.75in
+fig_crop: no
+---
+
+```{r setup, include=FALSE}
+library(MASS)
+library(mosaic)
+library(knitr)
+library(broom)
+library(tidyverse)
+options(width=70, digits=6, scipen=8)
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+# Set R output size a bit smaller than default
+opts_chunk$set(size='small') 
+# Set the default to NOT display R code
+opts_chunk$set(echo=TRUE) 
+```
+**Q1a**  
+Model 1: $Y = \beta_0 + \beta_1{HP} + \epsilon$
+```{r}
+-6.107 + 0.169*100
+```
+Model 2: $Y = \beta_0 + \beta_1{HP} + \delta_1{USA} + \delta_2{Japan} + \delta_3{Germany} + \epsilon$
+```{r}
+-4.117+0.174*100+0.311
+```
+Model 3: $Y = \beta_0 + \beta_1{HP} + \delta_1{USA} + \delta_2{Japan} + \delta_3{Germany} + \alpha_1{HP*USA} + \alpha_2{HP*Japan} + \alpha_1{HP*Germany} + \epsilon$
+```{r}
+-10.882+0.237*100+11.774+-0.095*100
+```
+**Q1b**  
+Model 2: $Y = \beta_0 + \beta_1{HP} + \delta_1{USA} + \delta_2{Japan} + \delta_3{Germany} + \epsilon$
+```{r}
+-4.117+0.174*100
+```
+Model 3: $Y = \beta_0 + \beta_1{HP} + \delta_1{USA} + \delta_2{Japan} + \delta_3{Germany} + \gamma_1{HP*USA} + \gamma_2{HP*Japan} + \gamma_1{HP*Germany} + \epsilon$
+```{r}
+-10.882+0.237*100
+```
+**Q1c**  
+The coefficient of -3.818 indicates that, while horsepower is held constant, the change in price of a car that was made in Japan in comparison to one that was made in an "other" country (i.e. NOT USA or Germany), is a decrease in \$3,818 USD. This coefficient does seem to be significantly different from zero (p < .01), meaning there is a significant effect of being Japanese-made on car price.  
+  
+**Q1d**  
+Based on Model 2, the effect of horsepower on the price of a car when all other factors are constant (i.e. comparing two cars that were made in the same country, though regardless of the actual country), a single-unit increase in a car's horsepower is associated with a \$174 USD increase in price for that car. The t-test for that coefficient indicates it is significantly different from zero (p < .001).  
+  
+**Q1e**  
+Based on Model 3, horsepower has a dual effect on the price: its own independent effect and the effect due to interaction with country of origin. The independent effect of horsepower when country of origin is held constant is interpreted as follows: for every unit increase in horsepower, the car's price increases by \$237 USD. This effect is significantly different from zero (p < .001). Horsepower has an additional effect on price that depends on what country the car was made in. This means that the additional effect of a one-unit increase in horsepower on car price differs depending on where the car was made. For example, if the car was made in the US, for every increase in horsepower there would be a decrease in price of \$52 USD (in comparison to a car made in an "other" country).  
+  
+**Q1f**  
+Obtain the value of the F-statistic to compare models 2 and 3:  
+$$F = \frac{\Delta{SSE}/\Delta{p}}{MSE_F} $$
+```{r}
+(1390.31-1319.85)/3/16.0957
+```
+Obtain the two-tailed p-value for this statistic:
+```{r}
+2 * pf(1.45919, df1 = 3, df2 = 82, lower.tail = F)
+```
+In order to test whether there is an interaction between horsepower and country, we can use an F-test to determine whether models 2 and 3 have significantly different fit to the data. The F-test is not significant (p = 0.46) with F(3, 82) = 1.46, indicating the two models are not significantly different from each other, which means we should probably stick with the simpler model (i.e. model 2) and thus can conclude there is likely no interaction between country and horsepower.
+  
+**Q1g**  
+  
+Cost of car in USA with 100 HP:
+```{r}
+-4.117+0.174*100-3.162
+```
+Cost of car in Japan with 100 HP:
+```{r}
+-4.117+0.174*100-3.818
+```
+Cost of car in Germany with 100 HP:
+```{r}
+-4.117+0.174*100+0.311
+```
+Cost of car in "Other" with 100 HP:
+```{r}
+-4.117+0.174*100
+```
+By comparing the cost of a car with equivalent horsepower (100) made in all four different countries, it becomes clear that the cheapest car regardless of horsepower is made in Japan. Additionally, the only coefficient that is not significantly different from zero is that for the effect of the car being made in Germany. Nontheless, even if we were to conclude that this coefficient is really zero and the effect of being made in Germany on price is no different from that of being made in "Other" countries, the price of a car in "Other" countries is still higher than that of a car with comparable horsepower made in Japan, making us more confident in our conclusion.
+
+**Q1h**  
+Obtain the value of the F-statistic to compare models 1 and 2:  
+$$F = \frac{\Delta{SSE}/\Delta{p}}{MSE_F} $$
+```{r}
+(1604.44-1390.31)/3/16.3566
+```
+Obtain the two-tailed p-value for this statistic:
+```{r}
+2 * pf(4.36378, df1 = 3, df2 = 85, lower.tail = F)
+```
+In order to test whether any two of the countries differed significantly in the price of cars with the same horsepower, we can use an F-test to determine whether models 1 and 2 have significantly different fit to the data. The F-test is significant (p = 0.01) with F(3, 85) = 4.36, indicating the two models are significantly different. Because of this, it seems likely that any two of the four countries do differ in car prices and we should keep the more complex model (i.e. model 2).  
+  
+**Q1i**  
+Based on the results for model 2, it seems the price of cars with the same horsepower does not significantly differ between Germany and Other countries (p = 0.87) and the two coefficients (Other = 0 and Germany = 0.311) are quite close, implying that these two categories can potentially be combined into one. Nonetheless, all the other coefficients are significantly different when compared to the reference category of Other, indicating that Japan and USA should not be merged with Other. That said, the coefficients for USA and Japan are quite similar (-3.162 and -3.818 respectively), meaning they could potentially be merged together. Nonetheless, we are unable to test whether these two categories differ significantly when compared to each other in their slopes, so we can't know for sure.
+  
+```{r Q2, include=FALSE}
+eduexp = read.table("http://www.stat.uchicago.edu/~yibi/s224/data/P151-153.txt", header=T)
+eduexp$region = factor(eduexp$region, labels=c("Northeast","Central","South","West"))
+eduexp$year = as.factor(eduexp$year)
+```
+**Q2a**
+```{r}
+ggplot(eduexp, aes(x = log(x1), y = log(y), color = year)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(~ region)
+```
+**Q2b**  
+```{r}
+mod1 <- lm(log(y) ~ log(x1) + region + year + log(x1):region + log(x1):year, data = eduexp)
+summary(mod1)
+```
+```{r}
+mod2 <- lm(log(y) ~ log(x1) + region + year + log(x1):region, data = eduexp)
+summary(mod2)
+```
+```{r}
+anova(mod2, mod1)
+```
+Models compared:  
+Full Model: $log(y) = \beta_0 + \beta_1log(x_1) + \beta_2Region + \beta_3Year + \gamma_1log(x_1)*Region + \gamma_2log(x_1)*Year + \epsilon$  
+Reduced Model: $log(y) = \beta_0 + \beta_1log(x_1) + \beta_2Region + \beta_3Year + \gamma_1log(x_1)*Region + \epsilon$  
+An F-test comparing models with and without the year by log(x1) interaction term is not significant (F(2, 138) = 0.83, p = 0.44), meaning that the two models both adequately fit the data, supporting the idea that there is no interaction between log(x1) and year.
+
+**Q2c**
+```{r}
+mod3 <- lm(log(y) ~ log(x1) + region + year + log(x1):year, data = eduexp)
+summary(mod3)
+```
+```{r}
+anova(mod3, mod1)
+```
+Models compared:  
+Full Model: $log(y) = \beta_0 + \beta_1log(x_1) + \beta_2Region + \beta_3Year + \gamma_1log(x_1)*Region + \gamma_2log(x_1)*Year + \epsilon$  
+Reduced Model: $log(y) = \beta_0 + \beta_1log(x_1) + \beta_2Region + \beta_3Year + \gamma_1log(x_1)*Year + \epsilon$  
+An F-test comparing models with and without the region by log(x1) interaction term is marginally significant (F(3, 138) = 2.651, p = 0.051), meaning that the two models are probably significantly different in their fit to the data, supporting the idea that there is in fact an interaction between log(x1) and region.
+
+**Q2d**
+```{r}
+moda <- lm(log(y) ~ region + year, data = eduexp)
+summary(moda)
+```
+```{r}
+anova(moda, mod1)
+```
+Models compared:  
+Full Model: $log(y) = \beta_0 + \beta_1log(x_1) + \beta_2Region + \beta_3Year + \gamma_1log(x_1)*Region + \gamma_2log(x_1)*Year + \epsilon$  
+Reduced Model: $log(y) = \beta_0 + \beta_2Region + \beta_3Year + \epsilon$  
+Based on the F-test (F(6, 138) = 18.19, p < .001) it seems that the two models are very different in their fit to the data, implying that the inclusion of log(x1) as a predictor of log(y) both alone and as an interaction term with region and year above and beyond the independent predictive effects of year and region is very much warranted. Nonetheless, this model does not test whether it's the independent or interaction effects of log(x1) that are driving the better fit. Judging by the tests for questions 2b and 2c, I would be tempted to say it's the main effect that is driving the better fit and the model with the best fit would probably be $log(y) = \beta_0 + \beta_1log(x_1) + \beta_2Region + \beta_3Year + \epsilon$. 
+```{r Q3, include = FALSE}
+NLSY = read.table("http://www.stat.uchicago.edu/~yibi/s224/data/NLSY.txt", header=T)
+modela = lm(log(Income2005) ~ AFQT + Gender + Edu2006, data=NLSY)
+modelb = lm(log(Income2005) ~ AFQT + Gender + as.factor(Edu2006), data=NLSY)
+NLSY$edu5grps = cut(NLSY$Edu2006, c(5.5,11.5,12.5,15.5,16.6,20.5))
+NLSY$edu5grps = factor(NLSY$edu5grps, 
+                       labels=c("6-11", "12", "13-15", "16", "17+"))
+modelc = lm(log(Income2005) ~ AFQT + Gender + edu5grps, data=NLSY)
+NLSY$eduscore1 = as.numeric(NLSY$edu5grps)
+modeld = lm(log(Income2005) ~ AFQT + Gender + eduscore1, data=NLSY)
+conversion = c("6-11"=9, "12"=12, "13-15"=13, "16"=16, "17+"=17)
+NLSY$eduscore2 = conversion[NLSY$edu5grps]
+modele = lm(log(Income2005) ~ AFQT + Gender + eduscore2, data=NLSY)
+```
+**Q3a**
+```{r}
+summary(modela)
+```
+```{r}
+summary(modelb)
+```
+**Model A is nested in model B** because all of the same predictors are present, but arranged in a different way (i.e. pairwise comparison in B as opposed to continuous in A).  
+Model A: $log(Income) = \beta'_0 + \beta_1Edu2006 + \beta_2AQFT + \beta_3Gender_M + \epsilon$  
+Model B: $log(Income) = \beta_0 + \beta_{1,k} + \beta_2AQFT + \beta_3Gender_M + \epsilon$ for $k = 6, ..., 20$  
+So Model A is a special case of model B when $\beta_0 + \beta_{1, k} = \beta'_0 + k\beta_1$.  
+  
+**Based on model A**, the effect of education is as follows: for every one year increase in education, the log of income increases by 0.0769 and this coefficient is significant (p < .001).  
+  
+**Based on model B**, the effect of education is as follows: each level of education has a different effect on income (i.e. a different slope) even though the intercept is the same. Additionally, while model A assumes the same linear increment for every year of education, model B allows for the increment between different years to vary.  
+  
+The comparison between having x years of education and having 6 years of education (the reference category) is not significant for any of the levels of education (i.e. x = 7, 8, ..., 20). So we cannot conclude that there's any difference in log of income between having 6 years of education and any other level of education. That said, the normal summary output of the model does not test the comparison between other levels, solely between any level and the reference level (i.e. 6 years of education). Thus, we cannot conclude that model B implies that people with higher education levels have higher log incomes controlling for Gender and AFQT scores. 
+```{r}
+anova(modela, modelb)
+```
+The F-test for comparing models A and B is significant (F(13, 2567) = 2.383, p = .004), allowing us to conclude that the models are in fact different and thus fit the data differently. 
+
+**Q3b**  
+```{r}
+summary(modelc)
+```
+```{r}
+anova(modelc, modelb)
+```
+Model B: $log(Income) = \beta_0 + \gamma_1EDU_7 + \gamma_2EDU_8 + \gamma_3EDU_9 + \gamma_4EDU_{10} + \gamma_5EDU_{11} + \gamma_6EDU_{12} + \gamma_7EDU_{13} + \gamma_8EDU_{14} + \gamma_9EDU_{15} + \gamma_{10}EDU_{16} + \gamma_{11}EDU_{17} + \gamma_{12}EDU_{18} + \gamma_{13}EDU_{19} + \gamma_{14}EDU_{20} + \beta_2AQFT + \beta_3Gender_M + \epsilon$
+  
+Model C: $log(Income) = \beta_0 + \delta_1EDU_{12} + \delta_2EDU_{13-15} + \delta_3EDU_{16} + \delta_4EDU_{17-20} + \beta_2AQFT + \beta_3Gender_M + \epsilon$ 
+  
+So model C is a special case of model B when $\gamma_1 = \gamma_2 = \gamma_3 = \gamma_4 = \gamma_5 = 0$, $\delta_1 = \gamma_6$, $\delta_2 = \gamma_7 = \gamma_8 = \gamma_9$, $\delta_3 = \gamma_{10}$ and $\delta_4 = \gamma_{11} = \gamma_{12} = \gamma_{13} = \gamma_{14}$.  
+  
+While model C assumes that the effect of education on log income is only different at certain levels (i.e. the borders between the groups), model B assumes the effect of education on log income can be different between each and every education level.  
+  
+From the F-test (F(10, 2567) = 1.581, p = .11) we conclude that the models are not significantly different from each other in their fit of the data.
+
+**Q3c**
+```{r}
+summary(modeld)
+```
+```{r}
+summary(modele)
+```
+Model C: $log(Income) = \beta_0 + \delta_1EDU_{12} + \delta_2EDU_{13-15} + \delta_3EDU_{16} + \delta_4EDU_{17-20} + \beta_2AQFT + \beta_3Gender_M + \epsilon$ 
+  
+Model D: $log(Income) = \beta_0 + \beta_1eduscore1 + \beta_2AQFT + \beta_3Gender_M + \epsilon$ 
+  
+Model E: $log(Income) = \beta_0 + \beta'_1eduscore2 + \beta_2AQFT + \beta_3Gender_M + \epsilon$ 
+
+Both models D and E are nested in model C because they are ordinal models created from the nominal model C and so have the same predictors, though in different configurations (in this case, different values assigned to each group and then treated as a continuous variable).  
+  
+The difference between the three models is in how each level of education affects the log of income. In model C, each level (i.e. each of the different groups of years of education) can have different effects on the log of income. In models D and E, the order of these levels and the added weight that each level gives to the effect on income is set by the experimenter, either in a linear fashion as in model D where each increase in level increases outcome by $1*\beta_1$ or in the setup created in model E where the increase between one level and the next is not necessarily the same.
+```{r}
+anova(modeld, modelc)
+```
+From the F-test (F(3, 2577) = 1.18, p = 0.32) we conclude that models C and D are not significantly different in their fit of the data.
+```{r}
+anova(modele, modelc)
+```
+From the F-test (F(3, 2577) = 0.435, p = 0.73) we conclude that models C and E are not significantly different in their fit of the data.
+  
+**Q3d (Bonus)**  
+The results of the anova tell us that there is a significant difference in how the two models (with and without edu2006) fit the data. On the other hand, the insignificant coefficients in model B tell us that no one single level of the variable of education, when compared to the reference level (i.e. 6 years) significantly predicts the outcome. These results are not inconsistent: while the former tells us that the composite education variable somehow explains some of the outcome, the latter tells us it most likely is a different relationship than the one we have structured by treating the variable as a categorical predictor.

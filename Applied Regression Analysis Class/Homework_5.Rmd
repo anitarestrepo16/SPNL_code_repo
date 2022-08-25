@@ -1,0 +1,449 @@
+---
+title: 'Stat 224: Homework 5'
+author: "Anita Restrepo"
+date: "11/10/2020"
+fontsize: 11pt
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+header-includes: \usepackage{pdfpages}
+geometry: margin=0.75in
+fig_crop: no
+---
+
+```{r setup, include=FALSE}
+library(MASS)
+library(mosaic)
+library(knitr)
+library(broom)
+library(tidyverse)
+library(car)
+options(width=70, digits=6, scipen=8, knitr.duplicate.label = "allow")
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+# Set R output size a bit smaller than default
+opts_chunk$set(size='small') 
+# Set the default to NOT display R code
+opts_chunk$set(echo=TRUE) 
+```
+```{r Q1, include = FALSE}
+eduexp = read.table("http://www.stat.uchicago.edu/~yibi/s224/data/P151-153.txt", header=T)
+eduexp$region = factor(eduexp$region, labels=c("Northeast","Central","South","West"))
+eduexp$year = as.factor(eduexp$year)
+lm1 = lm(y ~ x1*(year+region), data=eduexp)
+```
+  
+# Q1a  
+```{r}
+ggplot(eduexp, aes(x = lm1$fit, y = rstudent(lm1))) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") + 
+  labs(title = "Residuals vs. Fitted Values", x = "Fitted Values", 
+       y = "Externally Studentized Residuals")
+```
+There seems to be heterogeneity of variances because the points fan out in a systematic way as the fitted values increase.
+  
+# Q1b  
+```{r, fig.show="hold", out.width="50%"}
+qqnorm(lm1$res, ylab="Residuals")
+qqline(lm1$res)
+qqnorm(rstudent(lm1), ylab="Studentized Residuals")
+qqline(rstudent(lm1))
+```
+The plots tell us that the distribution of the residuals might be a bit right-skewed given that the points on the right trail off from the line a bit.  
+  
+# Q1c  
+```{r}
+boxcox(lm1)
+```
+The closest interpretable value of $\lambda$ that falls within the 95% CI is zero. Thus, the appropriate transformation is a log transformation.
+  
+# Q1d  
+```{r}
+lm2 = lm(log(y) ~ x1*(year+region), data=eduexp)
+```
+```{r, fig.show="hold", out.width="33%"}
+ggplot(eduexp, aes(x = lm2$fit, y = rstudent(lm2))) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") + 
+  labs(title = "Residuals vs. Fitted Values", x = "Fitted Values", 
+       y = "Externally Studentized Residuals")
+qqnorm(lm2$res, ylab="Residuals")
+qqline(lm2$residuals)
+qqnorm(rstudent(lm2), ylab="Studentized Residuals")
+qqline(rstudent(lm2))
+```
+
+The heteroscedasticity and lack of normality problems seem to have been solved since the residuals are now randomly distributed around the 0-line in the residual vs. fitted values plot and the points follow the line more closely in the QQ plots.
+  
+# Q2a  
+  
+## lm3  
+```{r}
+lm3 = lm(y ~ x2*(year+region), data=eduexp)
+ggplot(eduexp, aes(x = lm3$fit, y = rstudent(lm3))) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") + 
+  labs(title = "Residuals vs. Fitted Values", x = "Fitted Values", 
+       y = "Externally Studentized Residuals")
+```
+It is clear from this plot that for the model without transformation, there is heteroscedasticity in the data as the variance of the residuals increases as the fitted values increase. 
+```{r}
+boxcox(lm3)
+```
+Again, the closest interpretable value of $\lambda$ that falls within the 95% CI is zero, suggesting the correct transformation is a log transform.  
+  
+## lm4  
+```{r}
+lm4 = lm(log(y) ~ x2*(year+region), data=eduexp)
+ggplot(eduexp, aes(x = lm4$fit, y = rstudent(lm4))) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") + 
+  labs(title = "Residuals vs. Fitted Values", x = "Fitted Values", 
+       y = "Externally Studentized Residuals")
+```
+The heteroscedasticity seems to have sufficiently disappeared. Thus, the log transform of y as the outcome variable is a correct transformation, as suggested by the Box-Cox Method, to deal with the heteroscedasticity apparent in the model with y as the outcome.   
+  
+# Q2b  
+```{r, fig.show="hold", out.width="33%"}
+plot(hatvalues(lm3))
+plot(rstudent(lm3), hatvalues(lm3))
+plot(cooks.distance(lm3))
+```
+```{r, fig.show="hold", out.width="50%"}
+ggplot(eduexp, aes(x=rstudent(lm3), y=hatvalues(lm3), label=state, color=year)) +
+geom_text() +
+labs(x = "Studentized Residuals", y = "Leverage") +
+geom_hline(yintercept = 2*12/150)
+ggplot(eduexp, aes(x=hatvalues(lm3), y=cooks.distance(lm3), label=state, color=year)) +
+geom_text() +
+labs(x = "Leverage", y = "Cook's Distance")
+```
+The state with the greatest studentized residual is AK in 1975 (and 1970). AL had the highest leverage value in 1960. KY in 1960 might also give us some cause for concern as it seems to have a relatively large leverage as well.
+```{r, fig.show="hold", out.width="50%"}
+ggplot(eduexp, aes(x = x2, y = y, color=year, label=state, size=hatvalues(lm3))) +
+geom_text() +
+facet_wrap(~region) +
+xlab("Per Capita Income") +
+ylab("Education Expenditure") +
+theme(legend.position="top")
+ggplot(eduexp, aes(x = x2, y = y, color=year, label=state, size=cooks.distance(lm3))) +
+geom_text() +
+facet_wrap(~region) +
+xlab("Per Capita Income") +
+ylab("Education Expenditure") +
+theme(legend.position="top")
+```
+The position of AK in 1970 and 1975 is very different from that of the other states and by looking particularly at the cook's distance plot it's clear these two are influential and may pull the regression toward them.
+While both KY and AL seem to have the potential to unduly influence the regression, when looking at the cook's distance plot it doesn't seem like these two have too much influence.
+  
+# Q2c  
+```{r, fig.show="hold", out.width="50%"}
+ggplot(eduexp, aes(x=rstudent(lm4), y=hatvalues(lm4), label=state, color=year)) +
+geom_text() +
+labs(x = "Studentized Residuals", y = "Leverage") +
+geom_hline(yintercept = 2*12/150)
+ggplot(eduexp, aes(x=hatvalues(lm4), y=cooks.distance(lm4), label=state, color=year)) +
+geom_text() +
+labs(x = "Leverage", y = "Cook's Distance")
+```
+```{r, fig.show="hold", out.width="50%"}
+ggplot(eduexp, aes(x = x2, y = log(y), color=year, label=state, size=hatvalues(lm4))) +
+geom_text() +
+facet_wrap(~region) +
+xlab("Per Capita Income") +
+ylab("Education Expenditure") +
+theme(legend.position="top")
+ggplot(eduexp, aes(x = x2, y = log(y), color=year, label=state, size=cooks.distance(lm4))) +
+geom_text() +
+facet_wrap(~region) +
+xlab("Per Capita Income") +
+ylab("Education Expenditure") +
+theme(legend.position="top")
+```
+The transformation brought down the value of cook's distance for AK in 1975 and 1970 quite a bit, though the values are still pretty high compared to the other states. Likewise, the studentized residual for AK in 1975 was also reduced. Nonetheless, the leverage values for KY and AL do not seem to have decreased and, in fact, their cook's distance actually increased.   
+
+```{r Q3, include = FALSE}
+mammals = read.table("http://www.stat.uchicago.edu/~yibi/s224/data/mammals.txt", header=T)
+```
+  
+# Q3a  
+```{r, fig.show="hold", out.width="50%"}
+pairs(~Brain+Body+Gestation+Litter, data=mammals)
+pairs(~log(Brain)+log(Body)+Gestation+Litter, data=mammals, gap=1/10, oma=c(2,2,2,2))
+# gap = 1/10 reduces the gaps between plots to 1/10 of the default gap width
+# oma=c(2,2,2,2) reduces the margins of the plot
+```
+The relationships between many of the raw pairwise variables are not linear and the log transform makes these relationships closer to or pretty reliably linear.  
+  
+# Q3b    
+```{r}
+mod0 = lm(Brain ~ Body, data=mammals)
+mod1 = lm(log(Brain)~log(Body), data=mammals)
+```  
+  
+## Model 0  
+```{r, fig.show="hold", out.width="50%"}
+ggplot(mammals, aes(x = seq_along(hatvalues(mod0)), y = hatvalues(mod0))) +
+  geom_point() +
+  geom_text(aes(label=ifelse(hatvalues(mod0) > 2 * 2/96, as.character(Species),'')),
+            hjust=0,vjust=0, nudge_x = 1) +
+  geom_hline(yintercept = 2 * 2/96, color = "red") +
+  labs(title = "Model 0: Leverage vs. Index", y = "Leverage", x = "Index")
+ggplot(mammals, aes(x = seq_along(cooks.distance(mod0)), y = cooks.distance(mod0))) +
+  geom_point() +
+  geom_text(aes(label=ifelse(cooks.distance(mod0) > 1, as.character(Species),'')),
+            hjust=0,vjust=0, nudge_x = 1) +
+  labs(title = "Model 0: Cook's Distance vs. Index", y = "Cook's Distance", x = "Index")
+```
+African Elephant and Hippopotamus seem to be high leverage points based on model 0.  
+  
+## Model 1  
+```{r, fig.show="hold", out.width="50%"}
+ggplot(mammals, aes(x = seq_along(hatvalues(mod1)), y = hatvalues(mod1))) +
+  geom_point() +
+  geom_text(aes(label=ifelse(hatvalues(mod1) > 2 * 2/96, as.character(Species),'')),
+            hjust=0,vjust=0, nudge_x = 1) +
+  geom_hline(yintercept = 2 * 2/96, color = "red") +
+  labs(title = "Model 1: Leverage vs. Index", y = "Leverage", x = "Index")
+ggplot(mammals, aes(x = seq_along(cooks.distance(mod1)), y = cooks.distance(mod1))) +
+  geom_point() +
+  geom_text(aes(label=ifelse(cooks.distance(mod1) > .05, as.character(Species),'')),
+            hjust=0,vjust=0, nudge_x = 1) +
+  labs(title = "Model 1: Cook's Distance vs. Index", y = "Cook's Distance", x = "Index")
+```
+The values of leverage and cook's distance for African Elephants and Hippopotami are greatly reduced in Model 1. Nonetheless, based on the cut-off value of $2(p+1)/n$, both these species still have high leverage and they have actually been joined by a couple other friends.   
+  
+# Q3c  
+```{r, fig.show="hold", out.width="50%"}
+ggplot(mammals, aes(x = Gestation, y = mod1$residuals)) +
+  geom_point() +
+  labs(title = "Model 1: Gestation vs. Residuals", y = "Residuals", x = "Gestation") +
+  geom_hline(yintercept = 0, color = "red")
+ggplot(mammals, aes(x = log(Gestation), y = mod1$residuals)) +
+  geom_point() +
+  labs(title = "Model 1: log(Gestation) vs. Residuals", y = "Residuals", x = "log(Gestation)") +
+  geom_hline(yintercept = 0, color = "red")
+```
+It seems that as gestation length increases the residuals fan out and increase in a systematic way and this pattern is clearer when gestation is log transformed, potentially suggesting that there is some effect of gestation length on brain weight after accounting for body size and the log transformed version of gestation might be a better fit.  
+  
+# Q3d  
+  
+## Model 2
+```{r}
+mod2 = lm(log(Brain) ~ log(Body) + Gestation, data=mammals)
+```
+```{r, fig.show="hold", out.width="50%"}
+ggplot(mammals, aes(x=Gestation, y=mod2$res+mod2$coef[3]*Gestation)) + 
+  geom_point() + geom_smooth(method='lm') + geom_smooth(method='loess',col=2) +
+labs(x="Gestation Length (Days)", y="Residual+Component")
+crPlots(mod2, "Gestation")
+```
+  
+## Model  3  
+```{r}
+mod3 = lm(log(Brain) ~ log(Body) + log(Gestation), data=mammals)
+```
+```{r, fig.show="hold", out.width="50%"}
+ggplot(mammals, aes(x=log(Gestation), y=mod3$res+mod3$coef[3]*log(Gestation))) + 
+  geom_point() + geom_smooth(method='lm') + geom_smooth(method='loess',col=2) +
+labs(x="Log of Gestation Length", y="Residual+Component")
+crPlots(mod3, "log(Gestation)")
+```
+From these plots, it seems it might be better to include log(Gestation) as a predictor because the partial relationship with Y (brain weight) is more linear. The data clusters closer to the regression line and the loess line deviates less from the standard OLS line.  
+  
+# Q3e  
+```{r}
+mod4 = lm(log(Brain) ~ log(Body) + log(Gestation) + log(Litter), data=mammals)
+Rlitter = lm(log(Litter) ~ log(Body) + log(Gestation), data=mammals)$res
+Rbrain = lm(log(Brain) ~ log(Body) + log(Gestation), data=mammals)$res
+```
+```{r, fig.show="hold", out.width="50%"}
+ggplot(data.frame(mammals$Species, Rlitter, Rbrain), aes(x=Rlitter, y=Rbrain)) + 
+  geom_point() +
+  geom_text(aes(label= as.character(mammals.Species)), hjust="center",
+            vjust="top", nudge_y = .15) +
+  geom_smooth(method='lm') + labs(x="Litter: Residuals", y="Brain: Residuals") +
+  coord_cartesian(xlim = c(-2, 2))
+avPlots(mod4,"log(Litter)")
+```
+Based on this plot, it seems the species that are potentially unduly influencing the regression line for the partial relationship between litter size and brain weight are: Human Beings, Dolphins, Quokkas, Domestic Pigs and Nutrias.
+```{r, fig.show="hold", out.width="33%"}
+ggplot(mammals, aes(x = seq_along(hatvalues(mod4)), y = hatvalues(mod4))) +
+  geom_point() +
+  geom_text(aes(label=ifelse(hatvalues(mod4) > 2 * 4/96, as.character(Species),'')),
+            hjust=0,vjust=0, nudge_x = 1) +
+  geom_hline(yintercept = 2 * 4/96, color = "red") +
+  labs(title = "Model 4: Leverage vs. Index", y = "Leverage", x = "Index")
+ggplot(mammals, aes(x = seq_along(rstudent(mod4)), y = rstudent(mod4))) +
+  geom_point() +
+  geom_text(aes(label=ifelse((rstudent(mod4) > 2*sd(rstudent(mod4)) | 
+                                rstudent(mod4) < -2*sd(rstudent(mod4))),
+                             as.character(Species),'')),hjust=0,vjust=0, nudge_x = 1) +
+  labs(title = "Model 4: Standardized Residuals vs. Index", 
+       y = "Standardized Residual", x = "Index")
+ggplot(mammals, aes(x = seq_along(cooks.distance(mod4)), y = cooks.distance(mod4))) +
+  geom_point() +
+  geom_text(aes(label=ifelse(cooks.distance(mod4) > .02, as.character(Species),'')),
+            hjust=0,vjust=0, nudge_x = 1) +
+  labs(title = "Model 4: Cook's Distance vs. Index", y = "Cook's Distance", x = "Index")
+```
+For model 4, the potential outliers in the predictors are pigs, lemurs, Hyraxes, nutrias and quokkas as determined by their high leverage values. The potential outliers in the response variable are dolphins, humans, hippopotomi and tapirs based on their high standardized residual values (greater than 2 standard deviatons away from zero). Nonetheless, based on the plot of cook's distance, it seems that for model 4 as a whole none of the potential outliers (even the ones with high leverage) seem to be influential points, though there is some concern about humans and hippopotomi. Notice that quokkas, while having a much larger leverage value in comparison to other species, don't have a large cook's distance, indicating they may be high leverage points that are not influential.  
+  
+To see the effects of the potentially influential species in the specific relationship between Litter size and Brain weight, I removed one of the points at a time and recreated the Added-Variable Plot to see how the regression line shifts:
+
+```{r, fig.show="hold", out.width="50%"}
+mod4_q = lm(log(Brain) ~ log(Body) + log(Gestation) + log(Litter), data=
+              filter(mammals, Species != "Quokka"))
+Rlitter_q = lm(log(Litter) ~ log(Body) + log(Gestation), data=
+                 filter(mammals, Species != "Quokka"))$res
+Rbrain_q = lm(log(Brain) ~ log(Body) + log(Gestation), data=
+                filter(mammals, Species != "Quokka"))$res
+mammals_q <- data.frame(filter(mammals, Species != "Quokka")$Species,
+                        Rlitter_q, Rbrain_q) %>% 
+  rename(Species = filter.mammals..Species.....Quokka...Species)
+ggplot(mammals_q, aes(x=Rlitter_q, y=Rbrain_q)) + 
+  geom_point() +
+  geom_text(aes(label= as.character(Species)), hjust="center",
+            vjust="top", nudge_y = .15) +
+  geom_smooth(method='lm') + labs(title = "Added-Variable Plot without Quokka", 
+                                  x="Litter: Residuals", y="Brain: Residuals") +
+  coord_cartesian(xlim = c(-2, 2))
+ggplot(data.frame(mammals$Species, Rlitter, Rbrain), aes(x=Rlitter, y=Rbrain)) + 
+  geom_point() +
+  geom_text(aes(label= as.character(mammals.Species)), hjust="center",
+            vjust="top", nudge_y = .15) +
+  geom_smooth(method='lm') + labs(title = "Added-Variable Plot with All Species",
+                                  x="Litter: Residuals", y="Brain: Residuals") +
+  coord_cartesian(xlim = c(-2, 2))
+```
+Again, the removal of the quokka does not seem to have much of an effect on the partial regression line.
+```{r, fig.show="hold", out.width="50%"}
+mod4_h = lm(log(Brain) ~ log(Body) + log(Gestation) + log(Litter), data=
+              filter(mammals, Species != "Human being"))
+Rlitter_h = lm(log(Litter) ~ log(Body) + log(Gestation), data=
+                 filter(mammals, Species != "Human being"))$res
+Rbrain_h = lm(log(Brain) ~ log(Body) + log(Gestation), data=
+                filter(mammals, Species != "Human being"))$res
+mammals_h <- data.frame(filter(mammals, Species != "Human being")$Species, 
+                        Rlitter_h, Rbrain_h) %>% 
+  rename(Species = filter.mammals..Species.....Human.being...Species)
+ggplot(mammals_h, aes(x=Rlitter_h, y=Rbrain_h)) + 
+  geom_point() +
+  geom_text(aes(label= as.character(Species)), hjust="center",
+            vjust="top", nudge_y = .15) +
+  geom_smooth(method='lm') + labs(title = "Added-Variable Plot without Humans", 
+                                  x="Litter: Residuals", y="Brain: Residuals") +
+  coord_cartesian(xlim = c(-2, 2))
+ggplot(data.frame(mammals$Species, Rlitter, Rbrain), aes(x=Rlitter, y=Rbrain)) + 
+  geom_point() +
+  geom_text(aes(label= as.character(mammals.Species)), hjust="center",
+            vjust="top", nudge_y = .15) +
+  geom_smooth(method='lm') + labs(title = "Added-Variable Plot with All Species",
+                                  x="Litter: Residuals", y="Brain: Residuals") +
+  coord_cartesian(xlim = c(-2, 2))
+```
+Same goes for humans.
+```{r, fig.show="hold", out.width="50%"}
+mod4_d = lm(log(Brain) ~ log(Body) + log(Gestation) + log(Litter), data=
+              filter(mammals, Species != "Dolphin"))
+Rlitter_d = lm(log(Litter) ~ log(Body) + log(Gestation), data=
+                 filter(mammals, Species != "Dolphin"))$res
+Rbrain_d = lm(log(Brain) ~ log(Body) + log(Gestation), data=
+                filter(mammals, Species != "Dolphin"))$res
+mammals_d <- data.frame(filter(mammals, Species != "Dolphin")$Species,
+                        Rlitter_d, Rbrain_d) %>% 
+  rename(Species = filter.mammals..Species.....Dolphin...Species)
+ggplot(mammals_d, aes(x=Rlitter_d, y=Rbrain_d)) + 
+  geom_point() +
+  geom_text(aes(label= as.character(Species)), hjust="center",
+            vjust="top", nudge_y = .15) +
+  geom_smooth(method='lm') + labs(title = "Added-Variable Plot without Dolphins",
+                                  x="Litter: Residuals", y="Brain: Residuals") +
+  coord_cartesian(xlim = c(-2, 2))
+ggplot(data.frame(mammals$Species, Rlitter, Rbrain), aes(x=Rlitter, y=Rbrain)) + 
+  geom_point() +
+  geom_text(aes(label= as.character(mammals.Species)), hjust="center",
+            vjust="top", nudge_y = .15) +
+  geom_smooth(method='lm') + labs(title = "Added-Variable Plot with All Species",
+                                  x="Litter: Residuals", y="Brain: Residuals") +
+  coord_cartesian(xlim = c(-2, 2))
+```
+And dolphins. 
+```{r, fig.show="hold", out.width="50%"}
+mod4_p = lm(log(Brain) ~ log(Body) + log(Gestation) + log(Litter), data=
+              filter(mammals, Species != "Domestic pig" & Species != "Nutria"))
+Rlitter_p = lm(log(Litter) ~ log(Body) + log(Gestation), data=
+                 filter(mammals, Species != "Domestic pig" & Species != "Nutria"))$res
+Rbrain_p = lm(log(Brain) ~ log(Body) + log(Gestation), data=
+                filter(mammals, Species != "Domestic pig" & Species != "Nutria"))$res
+mammals_p <- data.frame(filter(mammals, Species != "Domestic pig" & 
+                                 Species != "Nutria")$Species, Rlitter_p, Rbrain_p) %>% 
+  rename(Species = filter.mammals..Species.....Domestic.pig....Species.....Nutria...Species)
+ggplot(mammals_p, aes(x=Rlitter_p, y=Rbrain_p)) + 
+  geom_point() +
+  geom_text(aes(label= as.character(Species)), hjust="center",
+            vjust="top", nudge_y = .15) +
+  geom_smooth(method='lm') + labs(title = "Added-Variable Plot without Pigs and Nutrias",
+                                  x="Litter: Residuals", y="Brain: Residuals") +
+  coord_cartesian(xlim = c(-2, 2))
+ggplot(data.frame(mammals$Species, Rlitter, Rbrain), aes(x=Rlitter, y=Rbrain)) + 
+  geom_point() +
+  geom_text(aes(label= as.character(mammals.Species)), hjust="center",
+            vjust="top", nudge_y = .15) +
+  geom_smooth(method='lm') + labs(title = "Added-Variable Plot with All Species",
+                                  x="Litter: Residuals", y="Brain: Residuals") +
+  coord_cartesian(xlim = c(-2, 2))
+```
+And even pigs and nutrias together (because they are so close to each other that just removing one without the other would probably not change much). So what if we remove all of these points together?
+```{r, fig.show="hold", out.width="50%"}
+mod4_all = lm(log(Brain) ~ log(Body) + log(Gestation) + log(Litter), data=
+                filter(mammals, Species != "Dolphin" & Species != "Human being" &
+                         Species != "Quokka" & Species != "Domestic pig" &
+                         Species != "Nutria"))
+Rlitter_all = lm(log(Litter) ~ log(Body) + log(Gestation), data=
+                   filter(mammals, Species != "Dolphin" & Species != "Human being" &
+                            Species != "Quokka" & Species != "Domestic pig" &
+                            Species != "Nutria"))$res
+Rbrain_all = lm(log(Brain) ~ log(Body) + log(Gestation), data=
+                  filter(mammals, Species != "Dolphin" & Species != "Human being" &
+                           Species != "Quokka" & Species != "Domestic pig" &
+                           Species != "Nutria"))$res
+mammals_all <- data.frame(filter(mammals, Species != "Dolphin" & Species != "Human being" &
+                                   Species != "Quokka" & Species != "Domestic pig" &
+                                   Species != "Nutria")$Species, Rlitter_all, Rbrain_all) %>% 
+  rename(Species = filter.mammals..Species.....Dolphin....Species.....Human.being....)
+ggplot(mammals_all, aes(x=Rlitter_all, y=Rbrain_all)) + 
+  geom_point() +
+  geom_text(aes(label= as.character(Species)), hjust="center",
+            vjust="top", nudge_y = .15) +
+  geom_smooth(method='lm') + labs(title = "Added-Variable Plot without Dolphins,
+                                  Humans, Quokkas, Pigs and Nutrias",
+                                  x="Litter: Residuals", y="Brain: Residuals") +
+  coord_cartesian(xlim = c(-2, 2), ylim = c(-1, 2))
+ggplot(data.frame(mammals$Species, Rlitter, Rbrain), aes(x=Rlitter, y=Rbrain)) + 
+  geom_point() +
+  geom_text(aes(label= as.character(mammals.Species)), hjust="center",
+            vjust="top", nudge_y = .15) +
+  geom_smooth(method='lm') + labs(title ="Added-Variable Plot with All Species",
+                                  x="Litter: Residuals", y="Brain: Residuals") +
+  coord_cartesian(xlim = c(-2, 2), ylim = c(-1, 2))
+```
+Even when they are all removed simultaneously, the regression line does not change, implying these points may not have that big of an effect on the partial regression line between log transformed litter and brain size after accounting for log transformed gestation length and body weight. As a final check, let's look at where these species sit in a single scatterplot that takes into account all of the predictor variables in the model in some way:
+```{r}
+ggplot(mammals, aes(x = log(Litter), y = log(Brain), size = log(Gestation), color = log(Body))) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  geom_text(label = ifelse(mammals$Species == "Human being" | mammals$Species == "Dolphin" |
+                             mammals$Species == "Quokka" | mammals$Species == "Nutria" |
+                             mammals$Species == "Domestic pig", 
+                           as.character(mammals$Species), ""), 
+            hjust="left",vjust="top", nudge_x = .025) +
+  coord_cartesian(xlim = c(-0.25, 2.5))
+```
+Again, while these points seem to be outliers in one dimension or another, they don't seem to be pulling the regression line towards them. Pigs have an overly large litter size in comparison to other species with similar body and brain sizes and gestation lengths. Dolphins and humans, on the other hand, have an overly small litter size and brain size in comparison to other species with similar body sizes. Nutrias seem to be right on the edge of the cluster of similar species, perhaps having a slightly larger litter size than others of similar gestation lengths and body sizes. Quokkas have a smaller litter and a larger brain size than species similar to them in terms of gestation length.

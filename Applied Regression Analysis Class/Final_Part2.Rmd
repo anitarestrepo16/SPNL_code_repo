@@ -1,0 +1,164 @@
+---
+title: 'Stat 224: Final Part 2'
+author: "Anita Restrepo"
+date: "12/10/2020"
+fontsize: 11pt
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+header-includes: \usepackage{pdfpages}
+geometry: margin=0.75in
+fig_crop: no
+---
+
+```{r setup, include=FALSE}
+library(MASS)
+library(mosaic)
+library(knitr)
+library(broom)
+library(tidyverse)
+library(car)
+library(tseries)
+options(width=70, digits=6, scipen=8, knitr.duplicate.label = "allow")
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+# Set R output size a bit smaller than default
+opts_chunk$set(size='small') 
+# Set the default to NOT display R code
+opts_chunk$set(echo=TRUE) 
+```
+```{r, include = FALSE}
+magad = read.table("http://www.stat.uchicago.edu/~yibi/s224/data/P187.txt", sep="\t", header=T)
+```
+  
+# Q1A  
+```{r}
+lm.mag1 = lm(R ~ P, data=magad)
+ggplot(magad, aes(x = lm.mag1$fit, y = lm.mag1$residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") + 
+  labs(title = "No Transformation: Raw Residuals vs. Fitted Values", x = "Fitted Values", 
+       y = "Raw Residuals")
+```
+There seems to be some heterogeneity of variance as the values of the raw residuals seem to fan out with increasing fitted values.
+  
+# Q1B  
+```{r}
+boxcox(lm.mag1)
+abline(v=1/2, col="red")
+```
+```{r, fig.show= "hold", out.width= "33%"}
+lm.mag2 <- lm(sqrt(R) ~ sqrt(P), data = magad)
+ggplot(magad, aes(x = sqrt(P), y = sqrt(R))) +
+  geom_point() +
+  geom_smooth(method = "lm") + 
+  labs(title = "Sqrt Transform Scatterplot", x = "Square Root of No. Pages of Advertising", 
+       y = "Square Root of Revenue")
+ggplot(magad, aes(x = sqrt(P), y = lm.mag2$residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(title = "Sqrt Transform: Residuals vs. Predictor", x = "Square Root of No. Pages of Advertising", 
+       y = "Raw Residuals")
+qqnorm(lm.mag2$res, ylab="Residuals")
+qqline(lm.mag2$res)
+```
+The box-cox plot indicated that a square-root transform for the data is appropriate. The updated OLS model with both the outcome and predictor transformed seems to comply with all OLS model assumptions: the relationship seems linear, no herescedasticity is present, and the QQ plot indicates a relatively normal distribution for the residuals.  
+  
+# Q1C  
+```{r}
+ggplot(magad, aes(x = lm.mag2$fit, y = lm.mag2$residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red") + 
+  labs(title = "Sqrt Transform: Raw Residuals vs. Fitted Values", x = "Fitted Values", 
+       y = "Raw Residuals")
+```
+Mimicking the plot of the residuals vs. the predictor above (which is the exact same because this is simple linear regression as opposed to multiple linear regression), there is no evidence for heteroscedasticity.  
+  
+# Q1D  
+```{r}
+predict(lm.mag2, data.frame(P = 5), interval="prediction")^2
+```
+Because the sqrt-transformed model better fits the OLS assumptions necessary to be able to make an accurate prediction, we use this model to find the predicted value and 95% CI, which we then convert back to the original scale by raising them to the power of two. The predicted value for a magazine with 500 pages of advertising is 6.18 million dollars in revenue and the 95% CI is 0.03 to 23.02 million dollars.  
+  
+```{r, include=FALSE}
+crime = read.csv("http://www.stat.uchicago.edu/~yibi/s224/data/CrimeCanada.txt", sep=" ", header=T)
+```  
+  
+# Q2A  
+```{r}
+fcrime1 = lm(fconvict ~ tfr, data=crime)
+acf(fcrime1$res)
+```
+It seems like the data is autocorrelated at lag-1, lag-2, lag-6, lag-7, lag-8 and lag-9.  
+  
+# Q2B  
+```{r}
+x = crime$tfr
+y = crime$fconvict
+n = length(y)
+n.iter = 20
+rho.iter = vector("numeric", n.iter)
+b0.iter = vector("numeric", n.iter)
+b1.iter = vector("numeric", n.iter)
+fit1 = lm(y ~ x)
+res = fit1$res
+rho.iter[1] = sum(res[1:(n-1)]*res[2:n]) / sum(res^2 ) 
+b0.iter[1] = fit1$coef[1]
+b1.iter[1] = fit1$coef[2]
+for(i in 2:n.iter){
+  rho.iter[i] = sum(res[1:(n-1)]*res[2:n]) / sum(res^2 ) 
+  ystar = y[2:n] - rho.iter[i]*y[1:(n-1)]
+  xstar = x[2:n] - rho.iter[i]*x[1:(n-1)]
+  fit2 = lm(ystar ~ xstar)$coef
+  b0.iter[i] = fit2[1]/(1-rho.iter[i]) 
+  b1.iter[i] = fit2[2]
+  res = y - b0.iter[i] - b1.iter[i]*x }
+data.frame(rho.iter, b0.iter, b1.iter)
+```
+The estimates did not converge as quickly as expected, but 20 iterations seemed to do the trick. The values are:
+$$\hat{\rho}=0.839187, \hat{\beta_0}= 193.058, \hat{\beta_1}=-0.0321708$$  
+  
+# Q2C  
+```{r}
+rho.hat = rho.iter[n.iter]
+ystar = y[2:n] - rho.hat*y[1:(n-1)]
+xstar = x[2:n] - rho.hat*x[1:(n-1)]
+xystar = data.frame(xstar, ystar)
+fcrime2 = lm(ystar ~ xstar, data = xystar)
+```  
+  
+## i) Time Plot  
+```{r}
+ggplot(xystar, aes(x=1:(n-1), y = fcrime2$res)) + 
+  geom_point() + 
+  geom_line() + 
+  labs(x="Index", y="Residual") + 
+  geom_hline(yintercept=0)
+```
+It doesn't seem like the time plot is very smooth since the line seems to cross the 0-line relatively often, presumably indicating the autocorrelation has been resolved.  
+  
+## ii) Runs test  
+```{r}
+runs.test(as.factor(fcrime2$res>0))
+```
+```{r}
+runs.test(as.factor(fcrime2$res>0), alternative = "less")
+```
+Neither the two-sided nor the one-sided runs tests are significant, indicating no autocorrelation.  
+  
+## iii) Autocorrelation Plot  
+```{r}
+acf(fcrime2$residuals)
+```
+All of the lag lines are within the range of the dotted lines, also indicating no evidence for autocorrelation. Taken together, the time plot, runs tests and autocorrelation plot suggest the autocorrelation has been removed.  
+  
+# Q2D  
+```{r}
+confint(fcrime2)
+```
+We use the xystar model because the original model does not conform to the independent errors assumptions, thus making the estimates from that model invalid. Because the transformation is simply $\hat{\beta_1} = \hat{\beta^{*}_1}$, the 95% CI for $\hat{\beta_1}$ is -0.0596546 to -0.00468696. This can be interpreted as: an increase in 1 birth per 1,000 women is associated with a *decrease* of .0047 to .0597 in the conviction rate per 1,000 women.

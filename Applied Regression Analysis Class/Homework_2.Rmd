@@ -1,0 +1,276 @@
+---
+title: 'Stat 224: Homework 2'
+author: "Anita Restrepo"
+date: "10/9/2020"
+fontsize: 11pt
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+header-includes: \usepackage{pdfpages}
+geometry: margin=0.75in
+fig_crop: no
+---
+
+```{r setup, include=FALSE}
+library(MASS)
+library(mosaic)
+library(knitr)
+library(broom)
+library(tidyverse)
+options(width=70, digits=6, scipen=8)
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+# Set R output size a bit smaller than default
+opts_chunk$set(size='small') 
+# Set the default to NOT display R code
+opts_chunk$set(echo=TRUE) 
+```
+
+```{r data cleaning, echo = FALSE}
+fevdata = read.table("http://www.stat.uchicago.edu/~yibi/s224/data/fevdata.txt", h = TRUE)
+fevdata$sex = factor(fevdata$sex, labels=c("Female","Male"))
+fevdata$smoke = factor(fevdata$smoke, labels=c("Nonsmoker","Smoker"))
+m.smokers = subset(fevdata, sex == "Male" & smoke == "Smoker")
+m.nonsmokers = subset(fevdata, sex == "Male" & smoke == "Nonsmoker")
+f.smokers = subset(fevdata, sex == "Female" & smoke == "Smoker")
+f.nonsmokers = data=subset(fevdata, sex == "Female" & smoke == "Nonsmoker")
+```
+
+**Q1**
+```{r, echo = FALSE}
+ggplot(fevdata, aes(x = age, y = fev)) +
+geom_point() +
+facet_grid(smoke~sex) +
+geom_smooth(method="lm") +
+xlab("Age (years)") +
+ylab("Lung Capacity (FEV in liters)")
+```
+Based on the scatterplot above it seems the strongest correlations are in the non-smoking males probably followed by non-smoking females, though smoking males seem to also be up there. Let's see what the data says:
+```{r}
+# create a list of the dataframes
+groups <- list(m.smokers, f.smokers, m.nonsmokers, f.nonsmokers)
+# create a function to get the covariance for fev and age
+get_cov <- function(x) {
+  cov(fev ~ age, data = x)
+}
+# create a function to get the correlation for fev and age
+get_cor <- function(x) {
+  cor(fev ~ age, data = x)
+}
+# apply the above functions to each element in the list
+Covariance <- map_dbl(groups, get_cov)
+Correlation <- map_dbl(groups, get_cor)
+# create a nice tibble with all the results
+cors_covs <- tibble("Group" = c("m.smokers", "f.smokers", "m.nonsmokers", "f.nonsmokers"),
+                    Covariance, Correlation)
+knitr::kable(cors_covs)
+```
+These numbers seem to match what is seen in the scatterplot above. The strongest relationship is that of male non-smokers (r = 0.82) followed by female non-smokers (r = 0.77). These values clarify that the relationship is stronger in female non-smokers than in male smokers as that wasn't completely clear based solely on the scatterplot.
+
+**Q2**
+```{r}
+lmm.smokers = lm(fev ~ age, data = m.smokers)
+summary(lmm.smokers)
+```
+From the output for the male smokers we see that the estimate of the slope is 0.14 and the estimate for the intercept is 1.76. Their corresponding standard errors are 0.07 and 0.96, respectively. The estimate for the SD of the noise (aka $\sigma$) is 0.834. The sample size is the degrees of freedom plus 2 (because two coefficients are being estimated) which equals 26.
+
+**Q3** 
+
+## Hypothesis 1  
+Calculate the t-statistic:
+$$t = \frac{\hat{\beta_0} - 0}{s.e.(\hat{\beta_0})}$$
+```{r}
+1.76/0.96
+```
+Calculate the p-value:
+```{r}
+pt(1.84, df = 24, lower.tail=F)
+```
+For hypothesis test #1 the result of t(24) = 1.84 is significant with a p-value of 0.039 meaning that the null is rejected and the intercept is most likely greater than zero.
+
+## Hypothesis 2  
+Calculate the t-statistic:
+$$t = \frac{\hat{\beta_1} - 0.1}{s.e.(\hat\beta_1)} $$
+```{r}
+(0.14-0.1)/0.07
+```
+Calculate the p-value:
+```{r}
+# calculate p value
+2*pt(abs(0.57), df = 24, lower.tail=F)
+```
+Because this test of t(24) = 0.57 is not significant (p = 0.57), we cannot reject the null that the slope is equal to 0.1 and thus cannot conclude that the slope is unequal to 0.1.
+
+## Hypothesis 3  
+Calculate the t-statistic:
+$$t = \frac{\hat\beta_1 - 0.1}{s.e.(\hat\beta_1)} $$
+```{r}
+(0.14-0.1)/0.07
+```
+Calculate the p-value:
+```{r}
+pt(0.57, df = 24, lower.tail=F)
+```
+Once again, because the test of t(24) = 0.57 is not significant (p = 0.29) we cannot reject the null that the slope is equal to 0.1 and thus cannot conclude that the slope is bigger than 0.1.
+
+## Hypothesis 4  
+Calculate the t-statistic:
+$$t = \frac{\hat\beta_1 - 0.2}{s.e.(\hat\beta_1)} $$
+```{r}
+(0.14-0.2)/0.07
+```
+Calculate the p-value:
+```{r}
+pt(-0.86, df = 24)
+```
+Because the test of t(24) = -0.86 is not significant (p = 0.199), we cannot reject the null and cannot conclude that the slope is smaller than 0.2.
+
+**Q4**  
+Find the critical t-value for a 90% confidence interval:
+```{r}
+qt(1 - 0.1/2, df = 24)
+```
+Calculate the upper 90% CI:
+$$CI = \hat\beta_1 + t^*s.e.(\hat\beta_1) $$
+```{r}
+0.14+1.71*0.07
+```
+Calculate the lower 90% CI:
+$$CI = \hat\beta_1 - t^*s.e.(\hat\beta_1) $$
+```{r}
+0.14-1.71*0.07
+```
+The 90% confidence interval for the slope indicates that there is a 90% chance that the true value of the slope (i.e. the linear relationship between age and lung capacity) lies between 0.2579 and 0.0203.
+
+**Q5**  
+To estimate the mean FEV for an 18-y/o:
+$$\hat{Y} = \hat{\beta_0} + \hat{\beta_1}x_0$$
+```{r}
+1.7636+0.1422*18
+```
+And the upper CI:
+$$CI = \hat{\beta_0} + \hat{\beta_1}x_0 + t^*\hat{\sigma}\sqrt{\frac{1}{n} + \frac{(x_0 - \bar{x})^2}{(n-1)var(x)}}$$
+```{r}
+4.3232 + qt(1 - 0.05/2, df = 24)*0.834*sqrt(1/24 +
+      (18-mean(m.smokers$age))^2/(25*var(m.smokers$age)))
+```
+And the lower CI:
+$$CI = \hat{\beta_0} + \hat{\beta_1}x_0 - t^*\hat{\sigma}\sqrt{\frac{1}{n} + \frac{(x_0 - \bar{x})^2}{(n-1)var(x)}}$$
+```{r}
+4.3232 - qt(1 - 0.05/2, df = 24)*0.834*sqrt(1/24 +
+    (18-mean(m.smokers$age))^2/(25*var(m.smokers$age)))
+```
+So in conclusion, the 90% confidence interval for the estimate of mean FEV for an 18-year-old ($\hat{Y}$ = 4.3232) is 3.65 and 4.99. 
+
+**Q6**  
+To estimate the mean FEV for a 14-y/o:
+$$\hat{Y} = \hat{\beta_0} + \hat{\beta_1}x_0$$
+```{r}
+1.7636+0.1422*14
+```
+And the upper CI:
+$$CI = \hat{\beta_0} + \hat{\beta_1}x_0 + t^*\hat{\sigma}\sqrt{\frac{1}{n} + \frac{(x_0 - \bar{x})^2}{(n-1)var(x)}}$$
+```{r}
+3.7544 + qt(1 - 0.05/2, df = 24)*0.834*sqrt(1/24 +
+    (14-mean(m.smokers$age))^2/(25*var(m.smokers$age)))
+```
+And the lower CI:
+$$CI = \hat{\beta_0} + \hat{\beta_1}x_0 - t^*\hat{\sigma}\sqrt{\frac{1}{n} + \frac{(x_0 - \bar{x})^2}{(n-1)var(x)}}$$
+```{r}
+3.7544 - qt(1 - 0.05/2, df = 24)*0.834*sqrt(1/24 +
+    (14-mean(m.smokers$age))^2/(25*var(m.smokers$age)))
+```
+So in conclusion, the 90% confidence interval for the estimate of mean FEV for a 14-year-old ($\hat{Y}$ = 3.7544) is 3.403 and 4.106. 
+
+The 90% confidence interval for 14 year olds (CI = 3.403, 4.106) is narrower and slightly lower than the 90% CI for 18 year olds (CI = 3.65, 4.99), meaning that, within this group of male smokers, 14 year olds potentially tend to have lower mean lung capacity than 18 year olds. Nonetheless, the CIs overlap, so it's possible that the true values of the estimates are very similar to each other.  
+  
+**Q7**  
+Estimate the predicted FEV for a single individual who is 14 years old:
+$$\hat{Y} = \hat{\beta_0} + \hat{\beta_1}x_0 + \varepsilon$$
+Where $\varepsilon$ is predicted to be the mean of zero.
+```{r}
+1.7636+0.1422*14 + 0
+```
+And the upper CI:
+$$CI = \hat{\beta_0} + \hat{\beta_1}x_0 + t^*\hat{\sigma}\sqrt{1 + \frac{1}{n} + \frac{(x_0 - \bar{x})^2}{(n-1)var(x)}}$$
+```{r}
+3.7544 + qt(1 - 0.05/2, df = 24)*0.834*sqrt(1 + 1/24 + 
+    (14-mean(m.smokers$age))^2/(25*var(m.smokers$age)))
+```
+And the lower CI:
+$$CI = \hat{\beta_0} + \hat{\beta_1}x_0 - t^*\hat{\sigma}\sqrt{1 + \frac{1}{n} + \frac{(x_0 - \bar{x})^2}{(n-1)var(x)}}$$
+```{r}
+3.7544 - qt(1 - 0.05/2, df = 24)*0.834*sqrt(1 + 1/24 + 
+    (14-mean(m.smokers$age))^2/(25*var(m.smokers$age)))
+```
+The 95% confidence interval for the predicted value of one individual who is 14 years old is wider (CI = 1.998, 5.511) than the 90% confidence interval of the mean estimated value for individuals who are 14 years old (CI = 3.403, 4.106) because the former has more uncertainty tied to it because it has to account for the individual error associated with that individual. 
+
+**Q8**
+```{r}
+lmm.nonsmokers = lm(fev ~ age, data=m.nonsmokers)
+summary(lmm.nonsmokers)
+```
+The estimates of the intercept and slope are -0.058 and 0.288 respectively.  
+  
+Find the critical t-value for a 90% confidence interval:
+```{r}
+qt(1 - 0.1/2, df = 24)
+```
+Calculate the upper 90% CI:
+$$CI = \hat\beta_1 + t^*s.e.(\hat\beta_1) $$
+```{r}
+0.288 + 1.71*0.011
+```
+Calculate the lower 90% CI:
+$$CI = \hat\beta_1 - t^*s.e.(\hat\beta_1) $$
+```{r}
+0.288 - 1.71*0.011
+```
+The 90% confidence interval for the slope for male smokers is 0.0203 and 0.2579 while that of male nonsmokers is 0.2692 and 0.3068. They do not overlap and the interval for male nonsmokers is higher, indicating that the relationship between age and lung capacity (FEV) is stronger (more positive) for males who do not smoke than for males who do smoke. This means that as males get older, their lung capacity increases more in the non-smoking group than in the smoking group, pointing to the role of smoking in stunting lung growth with age.  
+
+**Q9**
+```{r}
+ggplot(m.nonsmokers, aes(x = ht, y = fev)) + 
+  geom_point() +
+  geom_smooth(method = "lm") + 
+  labs(title = "Lung Capacity vs. Height for Male Non-Smokers",
+       y = "Lung Capacity (FEV in Liters)", x = "Height (Inches)")
+
+```
+```{r}
+cov(x = m.nonsmokers$ht, y = m.nonsmokers$fev)
+```
+```{r}
+cor(x = m.nonsmokers$ht, y = m.nonsmokers$fev)
+```
+**Q10**  
+The correlation would not be affected because of the standardization of the data but the covariance would change by a factor of 2.54 since, in the numerator of the formula, each $x_i$ and $\bar{x}$ are being multiplied by this constant. In other words, the covariance in inches would be multiplied by 2.54 to give the new covariance in cm.
+```{r}
+cov(x = m.nonsmokers$ht, y = m.nonsmokers$fev) * 2.54
+```
+
+**Q11**
+```{r}
+ggplot(m.nonsmokers, aes(x = ht, y = log(fev))) + 
+  geom_point() +
+  geom_smooth(method = "lm") + 
+  labs(title = "Log of Lung Capacity vs. Height for Male Non-Smokers",
+       y = "Log of Lung Capacity [log(FEV)]", x = "Height (Inches)")
+```
+While in the raw plot the the observations seemed to follow a curvilinear relationship between height and FEV that wasn't adequately captured by the lms line, the relationship between log(FEV) and height is clearly linear and is thus a better fit for the lms line. While not a measure of goodness of fit, the stronger relationship in the second plot is also reflected in the larger correlation coefficient (0.91 vs 0.88).
+```{r}
+cov(x = m.nonsmokers$ht, y = log(m.nonsmokers$fev))
+```
+```{r}
+cor(x = m.nonsmokers$ht, y = log(m.nonsmokers$fev))
+```
+
+**Q12**  
+Once again, the correlation would not be affected because the data is standardized when the correlation coefficient is calculated. While the unit transformation would usually change the covariance, since the variable being transformed is also being standardized into a log scale, this change does not happen and the covariance remains the same.
+
+

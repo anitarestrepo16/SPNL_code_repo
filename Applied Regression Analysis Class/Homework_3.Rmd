@@ -1,0 +1,238 @@
+---
+title: 'Stat 224: Homework 3'
+author: "Anita Restrepo"
+date: "10/17/2020"
+fontsize: 11pt
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+header-includes: \usepackage{pdfpages}
+geometry: margin=0.75in
+fig_crop: no
+---
+
+```{r setup, include=FALSE}
+library(MASS)
+library(mosaic)
+library(knitr)
+library(broom)
+library(tidyverse)
+options(width=70, digits=6, scipen=8)
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+# Set R output size a bit smaller than default
+opts_chunk$set(size='small') 
+# Set the default to NOT display R code
+opts_chunk$set(echo=TRUE) 
+```
+```{r data cleaning, include = FALSE}
+data("trees")
+colnames(trees) = c("Diameter", "Height", "Volume")
+```
+
+# Q1  
+  
+```{r}
+lmtrees = lm(log(Volume) ~ log(Diameter) + log(Height), data = trees)
+tidy(lmtrees)
+```
+```{r}
+RY = lm(log(Volume) ~ log(Diameter), data = trees)$res
+RHt = lm(log(Height) ~ log(Diameter), data = trees)$res
+lm(RY ~ RHt)$coef
+```
+
+# Q2a  
+  
+Model 1 is a better choice because it allows us to see the effect of gender on salary while holding all other variables constant (i.e. while holding qualification constant). Model 2 would not answer our question because it is looking at effects of gender on qualification while holding salary constant. The coefficient estimate in model 1 is 0.224 and because the reference category in this case is women because they are coded as zero, that means that there is a 0.224 thousand dollar increase in salary associated with being male even when the qualification is equal and held constant. In other words, men make 224 dollars more than women who are equally qualified. Nonetheless, because the p-value for the significance test of this coefficient is 0.63, we cannot conclude that this coefficient is signficantly different from zero, so even though the size of the coefficient leads us to a certain conclusion, our inability to reject the null should make us wary of drawing that conclusion.
+  
+# Q2b    
+
+For this one, model 2 is a better choice because it allows us to see the differences in qualification by gender while holding salary constant (i.e. what effect gender has on qualification at the same salary level). Because the coefficient estimate is 0.85 and women are coded as zero, we conclude that, at the same salary level, there's a 0.85 point increase in qualification associated with being male as opposed to female. Again, the p value for this coefficient is 0.053, which is trending towards significane, indicating we should not be too certain about this conclusion based solely on the magnitude of the regression parameter.  
+  
+# Q3a  
+
+```{r}
+BGSG = read.table("http://www.stat.uchicago.edu/~yibi/s224/data/BGSgirls.txt", header=T)
+model1 = lm(Soma ~ WT2+HT2+ WT9 +HT9 + ST9, data=BGSG)
+summary(model1)
+```
+```{r}
+anova(model1)
+```
+Calculate the total Sum of Squares for the regression:
+```{r}
+3.304+1.402+17.605+0.249+0.796
+```
+Calculate the total Mean Squares for the regression:
+```{r}
+23.356/5
+```
+Calculate the Total Sum of Squares:
+```{r}
+23.256+21.462
+```
+
+
+Source       df                Sum of Squares    Mean Squares   F      p-value
+--------    --------------   ----------------   -------------  -----  ---------
+Regression  5                23.356              4.6712        13.9    <.001
+Error       64               21.462              0.335
+Total       69               44.718
+---------  --------------    ----------------   -------------  -----  ---------
+  
+# Q3b  
+
+```{r}
+full_model <- lm(Soma ~ WT2+HT2+ WT9 +HT9 + ST9, data=BGSG)
+reduced_model <- lm(Soma ~ WT9 +HT9, data=BGSG)
+anova(reduced_model, full_model)
+```
+```{r}
+summary(reduced_model)
+```
+```{r}
+summary(full_model)
+```
+
+The anova for the full model (all predictors) vs. the reduced model (only including WT9 and HT9 as predictors) is significant (p = 0.03) with F(3, 64) = 3.27, allowing us to conclude that the models are significantly different. Additionally, the full model seems to explain around 52% of the variance while the reduced model explains around 45% of the variance (though the comparison between the adjusted $R^2$ values is not as stark: 0.48 for the full model vs. 0.43 for the reduced model). Given all of this information, it seems we should stick with the full model where $\beta_1 \neq \beta_2 \neq \beta_5 \neq 0$. 
+  
+# Q3c  
+
+```{r}
+BGSG <- BGSG %>% mutate(DW = WT9-WT2)
+m2 <- lm(Soma ~ HT2 + HT9 + DW + ST9, data=BGSG)
+```
+  
+## (i)  
+Model 2 is nested in model 1 as becomes apparent when model 1 ($Soma = \beta_0 + \beta_1HT2 + \beta_2WT2 + \beta_3HT9 + \beta_4WT9 + \beta_5ST9$) is configured to become model 2: $Soma = \beta_0 + \beta_1HT2 + \beta_3HT9 + \beta'(WT9 - WT2) + \beta_5ST9$. Because all of the predictors that were originally in model 1 are also in model 2 though simply in a different configuration, it is clear that model 2 is a special case of model 1 when $-\beta_2 = \beta_4 = \beta'$.  
+  
+## (ii)  
+```{r}
+anova(m2, model1)
+```
+The alternative hypothesis is that $-\beta_2 = \beta_4 = \beta'$ as specified by the model 2 whereas the null hypothesis is that $\beta_2 \neq \beta_4 \neq \beta'$ as specified by model 1. The result of the anova is not significant (p = 0.2) with F(1, 64) = 1.677 suggesting that the two models are NOT significantly different, thus potentially supporting the idea that weight *gain* from age 2 to 9 is more influential than the levels at the two ages on somatotype since the simpler model seems to fit the data as adequately as the full model.
+  
+# Q4  
+
+```{r}
+food <- read.table("http://www.stat.uchicago.edu/~yibi/s224/data/food.txt", h = T)
+ee <- read.table("http://www.stat.uchicago.edu/~yibi/s224/data/EE.txt", h = T)
+te = read.table("http://www.stat.uchicago.edu/~yibi/s224/data/TE.txt", h = T)
+```
+
+# Q4a  
+
+```{r}
+food_lm <- lm(log(V) ~ log(K) + log(L), data = food)
+summary(food_lm)
+```
+```{r}
+confint(food_lm)
+```
+The estimate for $\beta_1$ is 0.227 with a 95% confidence interval between -0.33 and 0.78 which can be interpreted as the following: With 95% confidence, 1% increase in capital input would lead to a -0.33% to 0.78% increase in output. Nonetheless, the t-test for this coefficient is not significant and the 90% CI spans zero, meaning we cannot conclude that the parameter is significantly different from zero.  
+The estimate for $\beta_2$ is -1.46 with a 95% confidence interval between -2.05 and -0.86 which can be interpreted as follows: With 95% confidence, 1% increase in labor input would lead to a 0.86% to a 2.05% *decrease* in output. This estimate is significant ( p < .001), indicating the parameter is significantly different from zero.
+  
+# Q4b  
+  
+## Food  
+```{r}
+food <- food %>% mutate(y_new = log(V)-log(L), x_new = log(K)-log(L))
+lmfull = lm(y_new ~ x_new + log(L), data = food)
+lmreduced = lm(y_new ~ x_new, data = food)
+```
+Following the method from class:
+```{r}
+anova(lmreduced, lmfull)
+```
+```{r}
+summary(lmfull)
+```
+```{r}
+confint(lmfull)
+```
+For the food sector, the estimate ($\hat\delta = -2.23$) and 95% confidence interval for delta (CI = -3.25 to -1.21) are all negative (and the t-test for delta is significant with p < .001) so we can conclude this sector has *decreased* return to scale.
+  
+## EE  
+```{r}
+ee <- ee %>% mutate(y_new = log(V)-log(L), x_new = log(K)-log(L))
+lmfull = lm(y_new ~ x_new + log(L), data = ee)
+lmreduced = lm(y_new ~ x_new, data = ee)
+```
+Following the method from class:
+```{r}
+anova(lmreduced, lmfull)
+```
+```{r}
+summary(lmfull)
+```
+```{r}
+confint(lmfull)
+```
+For the EE sector, the estimate of delta is negative ($\hat\delta = -0.22$). Nonetheless, the 95% confidence interval for delta (CI = -0.97-0.53) spans zero (and the t-test for delta is not significant with p = 0.53) so we cannot reject the null, probably leading us to conclude that this sector has *constant* return to scale because delta is not significantly different from zero.
+  
+## TE  
+```{r}
+te <- te %>% mutate(y_new = log(V)-log(L), x_new = log(K)-log(L))
+lmfull = lm(y_new ~ x_new + log(L), data = te)
+lmreduced = lm(y_new ~ x_new, data = te)
+```
+Following the method from class:
+```{r}
+anova(lmreduced, lmfull)
+```
+```{r}
+summary(lmfull)
+```
+```{r}
+confint(lmfull)
+```
+For the TE sector, the estimate of delta is positive ($\hat\delta = 0.35$). Nonetheless, the 95% confidence interval for delta (CI = -0.10-0.80) spans zero (and the t-test for delta is not significant with p = 0.12) so we cannot reject the null, probably leading us to conclude that this sector has *constant* return to scale because delta is not significantly different from zero.
+  
+# Q4c  
+
+```{r}
+summary(lm(y_new ~ x_new, data = ee))
+```
+Assuming constant return to scale for this sector (i.e. $\delta = 0$), the estimate for $\beta_1$ is calculated to be 0.90, which makes the estimate for $\beta_2 = 1 - \beta_1 = 1 - 0.90 = 0.10$.
+  
+# Q4d  
+  
+## Food  
+```{r}
+food_lm_tech <- lm(log(V) ~ YEAR + log(K) + log(L), data = food)
+anova(food_lm, food_lm_tech)
+```
+```{r}
+summary(food_lm_tech)
+```
+The estimate for log($\rho$) is 0.01. The anova does *not* indicate the model with technological progress is significantly different from the model without techonological progress (F(1, 11) = 0.16, p = 0.70) and the t-test for log($\rho$) also does not indicate this value is significantly different from zero (t(11) = 0.39, p = 0.70) meaning that the likelihood that there was technological progress in this sector is very slim.
+  
+## EE  
+```{r}
+ee_lm <- lm(log(V) ~ log(K) + log(L), data = ee)
+ee_lm_tech <- lm(log(V) ~ YEAR + log(K) + log(L), data = ee)
+anova(ee_lm, ee_lm_tech)
+```
+```{r}
+summary(ee_lm_tech)
+```
+
+The estimate for log($\rho$) is 0.02. The anova does indicate the model with technological progress is significantly different from the model without techonological progress (F(1, 11) = 51.93, p < .001) and the t-test for log($\rho$) also does indicate this value is significantly different from zero (t(11) = 7.21, p < .001) meaning that there was technological progress in this sector because the estimate of log($\rho$) is greater than 0 (though not much larger).
+  
+## TE  
+```{r}
+te_lm <- lm(log(V) ~ log(K) + log(L), data = te)
+te_lm_tech <- lm(log(V) ~ YEAR + log(K) + log(L), data = te)
+anova(te_lm, te_lm_tech)
+```
+```{r}
+summary(te_lm_tech)
+```
+
+The estimate for log($\rho$) is 0.005. The anova does *not* indicate the model with technological progress is significantly different from the model without techonological progress (F(1, 11) = 0.303, p = 0.59) and the t-test for log($\rho$) also does not indicate this value is significantly different from zero (t(11) = 0.55, p = 0.59) meaning that the likelihood that there was technological progress in this sector is very slim.

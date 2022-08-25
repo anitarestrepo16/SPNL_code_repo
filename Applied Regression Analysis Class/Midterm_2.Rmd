@@ -1,0 +1,50 @@
+---
+title: 'Stat 224: Midterm Part 2'
+author: "Anita Restrepo"
+date: "9/8/2020"
+fontsize: 11pt
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+header-includes: \usepackage{pdfpages}
+geometry: margin=0.75in
+fig_crop: no
+---
+
+```{r setup, include=FALSE}
+library(MASS)
+library(mosaic)
+library(knitr)
+library(broom)
+library(tidyverse)
+options(width=70, digits=6, scipen=8)
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+# Set R output size a bit smaller than default
+opts_chunk$set(size='small') 
+# Set the default to NOT display R code
+opts_chunk$set(echo=TRUE) 
+```
+
+```{r}
+data("trees")
+colnames(trees) = c("Diameter", "Height", "Volume")
+```
+$$log(Volume) = \beta_0 + 2*\beta_2log(Diameter) + \beta_2log(Height) + \epsilon $$
+$$log(Volume) = \beta_0 + \beta_2(2*log(Diameter) + log(Height)) + \epsilon$$
+$$W = 2*log(Diameter) + log(Height)$$
+```{r}
+trees <- mutate(trees, W = 2*log(Diameter)+log(Height))
+full_model = lm(log(Volume) ~ log(Diameter) + log(Height), data = trees)
+reduced_model = lm(log(Volume) ~ W, data = trees)
+anova(reduced_model, full_model)
+```
+The results of the F-test (F(1, 28) = 0.308, p = 0.583) are not significant, suggesting the two models fit the data equally well. For this reason, it seems likely that we do not reject the null ($H_0: \beta_1 = 2\beta_2$).
+
+
+

@@ -1,0 +1,177 @@
+---
+title: 'STAT 224: Homework 1'
+author: "Anita Restrepo"
+fontsize: 11pt
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+header-includes: \usepackage{pdfpages}
+geometry: margin=0.75in
+fig_crop: no
+---
+
+```{r setup, include=FALSE}
+library(MASS)
+library(mosaic)
+library(knitr)
+library(broom)
+library(tidyverse)
+options(width=70, digits=6, scipen=8)
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+# Set R output size a bit smaller than default
+opts_chunk$set(size='small') 
+# Set the default to NOT display R code
+opts_chunk$set(echo=TRUE) 
+```
+
+```{r, echo = FALSE}
+NLSY = read.table("http://www.stat.uchicago.edu/~yibi/s224/data/NLSY.txt", header=T)
+```
+
+**(a)**
+```{r, include = TRUE}
+ggplot(NLSY) + 
+  geom_histogram(aes(Edu2006), binwidth = 1) +
+  labs(title = "Histogram of Years of Education", 
+       x = "Education (Years)", y = "Count") +
+  scale_x_continuous(breaks = seq(5, 20, by = 1))
+```
+The modes of the histogram seem to be located at 12 years of education and 16 years of education, which makes sense because in the US school system, individuals go through 12 years of primary schooling (K-12) and optionally four more years of college (12 + 4 = 16). A natural bindwidth for this variable (as set in the plot) is 1 year.
+
+**(b)**
+```{r, include = TRUE}
+ggplot(NLSY) + 
+  geom_boxplot(aes(x = Gender, y = Edu2006)) +
+  labs(title = "Descriptives of Education by Gender", 
+       y = "Education (Years)") +
+  scale_y_continuous(limits = c(5, 20), breaks = seq(5, 20, by = 1))
+```
+```{r, include = TRUE}
+favstats(Edu2006 ~ Gender, data = NLSY)
+```
+Based on this data, it seems men and women had almost identical levels of education. While females seemed to have a slightly higher mean (13.97), the difference from the male mean (13.81) is very small. The two boxplots look identical because all the basic descriptives that are represented by the boxplot (median, IQR, minima, maxima) are the same between the two genders, and the difference in means is too small to be visually perceived by the naked eye in the position of the actual boxes.
+
+**(c)**
+```{r, include = TRUE}
+ggplot(NLSY) +
+  geom_histogram(aes(x = Edu2006), binwidth = 1) +
+  facet_grid(Gender~.) +
+  labs(title = "Histograms of Education by Gender", 
+       x = "Education (Years)", y = "Count") +
+  scale_x_continuous(breaks = seq(5, 20, by = 1)) +
+  scale_y_continuous(breaks = seq(0, 600, by = 50))
+```
+The histograms contain information about frequency that is not present in the boxplots. For example, while the overall mean and median are very similar or identical as seen in the boxplot, it is clear from the histograms that males seem to be more concentrated in the modes (i.e. 12 and 16 years of education) while for females the difference between the modes and the other values, while still a large difference, is not as pronounced as in males.
+
+**(d)**
+```{r}
+ggplot(NLSY) + 
+  geom_boxplot(aes(x = Gender, y = Income2005)) +
+  labs(title = "Descriptives of Income by Gender", 
+       y = "Annual Income (Thousands of Dollars)") +
+  scale_y_continuous(limits = c(0, 710), breaks = seq(0, 750, by = 50))
+```
+
+```{r}
+ggplot(NLSY) +
+  geom_histogram(aes(x = Income2005), binwidth = 25) +
+  facet_grid(Gender~.) +
+  labs(title = "Histograms of Income by Gender", 
+       x = "Yearly Income (Thousands of Dollars)", y = "Count") +
+  scale_x_continuous(breaks = seq(0, 750, by = 50)) +
+  scale_y_continuous(breaks = seq(0, 600, by = 50))
+```
+Judging by the data, it seems that males have a higher mean income than females and they also have a higher variability in the distribution of income with many more outliers (including one extreme outlier) than females. Nonetheless, even when judgng by the median as opposed to the mean to account for the larger proportion of outliers, the median income for males is still higher than that of females. Apart from the outliers, it is clear from the boxplots that the IQR for males is larger than that of females. In terms of the histograms, while both distributions seem to approximate normality, the difference between the mode and other values is more pronounced in females than males. Again, the lower variability for females is evidenced in the histogram as most values concentrate around the mode.
+
+**(e)**
+```{r}
+ggplot(NLSY) + 
+  geom_boxplot(aes(x = Gender, y = log(Income2005))) +
+  labs(title = "Descriptives of Income by Gender", 
+       y = "Log of Annual Income (Thousands of Dollars)") 
+```
+```{r}
+ggplot(NLSY) +
+  geom_histogram(aes(x = log(Income2005)), binwidth = 0.25) +
+  facet_grid(Gender~.) +
+  labs(title = "Histograms of Income by Gender", 
+       x = "Log-Transformed Yearly Income (Thousands of Dollars)", y = "Count") 
+```
+It seems the skewness has flipped with the logarithmic transformation. While the histograms for the plain old `Income2005` were positively skewed, the log histograms are negatively skewed.
+
+**(f)**
+```{r}
+ggplot(NLSY) + 
+  geom_boxplot(aes(x = Gender, y = Income2005)) +
+  facet_wrap(~Edu2006) +
+  labs(title = "Income by Gender and Education", 
+       y = "Annual Income (Thousands of Dollars)")
+```
+
+```{r}
+ggplot(NLSY) + 
+  geom_boxplot(aes(x = Gender, y = log(Income2005))) +
+  facet_wrap(~Edu2006) +
+  labs(title = "Income by Gender and Education (log-transformed)", 
+       y = "Log of Annual Income (Thousands of Dollars)")
+```
+It seems that men consistently earned more than women even when they had the same number of years of education (I wish this data weren't real data because this makes me sad). Just from looking at these plots it doesn't seem like there's a systematic relationship between the size of the gender gap and the number of years of education.
+
+**(g)**
+```{r}
+ggplot(NLSY) +
+  geom_point(aes(x = AFQT, y = Income2005)) +
+  labs(title = "Intelligence Measure vs. Income", 
+       x = "Intelligence Percentile", y = "Yearly Income (Thousands of Dollars)")
+```
+```{r}
+ggplot(NLSY) +
+  geom_point(aes(x = AFQT, y = log(Income2005))) +
+  labs(title = "Intelligence Measure vs. Income - Log Transformed", 
+       x = "Intelligence Percentile", y = "Log of Yearly Income (Thousands of Dollars)")
+```
+1. From the raw scatterplot, it seems there is a slight positive linear relationship between AFQT and income (i.e. higher AFQT scores are associated with higher income). From the log plot this relationship is more clearly visible.
+2. From the raw plot it is very evident that as AFQT scores increase, the variability in income also increases. 
+3. The relationship between AFQT scores and the variability of income is not as clear when income is log transformed. Based on purely visual inspection, it seems there is still a slight increase in variability as AFQT scores increase as evidenced by the lower right portion of the plot.
+
+**(h)**
+```{r}
+ggplot(NLSY, aes(x = AFQT, y = log(Income2005), color = Gender)) +
+  geom_point(alpha = 0.25) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Intelligence Measure vs. Log Income by Gender", 
+       x = "Intelligence Percentile", y = "Log of Yearly Income (Thousands of Dollars)")
+```
+```{r}
+ggplot(filter(NLSY, Gender == "male"), aes(x = AFQT, y = log(Income2005))) +
+  geom_point(color = "dark blue") +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "MALES: Intelligence Measure vs. Income - Log Transformed", 
+       x = "Intelligence Percentile", y = "Log of Yearly Income (Thousands of Dollars)")
+```
+```{r}
+ggplot(filter(NLSY, Gender == "female"), aes(x = AFQT, y = log(Income2005))) +
+  geom_point(color = "pink") +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "FEMALES: Intelligence Measure vs. Income - Log Transformed", 
+       x = "Intelligence Percentile", y = "Log of Yearly Income (Thousands of Dollars)")
+```
+1. It seems that for both genders higher AFQT scores are associated with higher log incomes. While the variability of log income is higher for females than males overall, it is hard to tell from just the plots whether variability is increasing as AFQT scores increase. From visual inspection I would say there is maybe a slight positive relationship where an increase in AFQT scores results in increased variability of log income scores for both genders, perhaps a bit more so for females than males. 
+2. While the rate of increase (i.e. the slope) of log income based on AFQT score seems to be very similar between males and females, it is clear, especially from the first plot, that males earn more in general than females, even when they have the same AFQT score, which is highly depressing.
+
+**(i)**
+```{r}
+ggplot(NLSY, aes(x = AFQT, y = log(Income2005), color = Gender)) +
+  geom_point(alpha = 0.25) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Intelligence Measure vs. Log Income by Gender and Education", 
+       x = "Intelligence Percentile", y = "Log of Yearly Income (Thousands of Dollars)") +
+  facet_wrap(~Edu2006)
+```
+By comparing the facets it is possible to ascertain that men do indeed earn more in general than women even when they have the same number of years of education since the regression lines for men tend to be higher than those for women across all facets. That said, the relationship between intelligence and income by gender seems to be slightly different depending on number of years of education attained. For example, for ranges outside of 12-18 years of education, the gender gap in income overall is less clear (particularly at 19 and 20 years of education) and the direction and strength of the relationship between intelligence and income is different between men and women, which is not seen in the range between 12-18 years. While these effects may be due to statistical effects of having a smaller sample, there may be some theoretical considerations at play as well.

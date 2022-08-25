@@ -1,0 +1,108 @@
+---
+title: 'Stat 224: Final Part 3'
+author: "Anita Restrepo"
+date: "12/11/2020"
+fontsize: 11pt
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+header-includes: \usepackage{pdfpages}
+geometry: margin=0.75in
+fig_crop: no
+---
+
+```{r setup, include=FALSE}
+library(MASS)
+library(mosaic)
+library(knitr)
+library(broom)
+library(tidyverse)
+library(car)
+library(tseries)
+options(width=70, digits=6, scipen=8, knitr.duplicate.label = "allow")
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+# Set R output size a bit smaller than default
+opts_chunk$set(size='small') 
+# Set the default to NOT display R code
+opts_chunk$set(echo=TRUE) 
+```
+```{r,include=FALSE}
+windchill = read.table("http://www.stat.uchicago.edu/~yibi/s224/data/P188.txt", header=T)
+```  
+  
+# Q3A  
+```{r, fig.show= "hold", out.width= "50%"}
+lm1 = lm(W ~ V + T, data = windchill)
+avPlots(lm1, "V")
+crPlots(lm1, "V")
+```
+The added-variable plot and the residual plus component plot indicate that the relationship between V and W while holding T fixed is not linear. This is especially clear in the residual plus component plot as the purple line does not align with the blue lm line.  
+  
+# Q3B  
+```{r, fig.show= "hold", out.width= "50%"}
+avPlots(lm1, "T")
+crPlots(lm1, "T")
+```
+In conrtrast, the relationship between T and W while keeping V fixed does seem to be reliably linear as the purple line aligns nicely with the blue lm line.  
+  
+# Q3C  
+```{r, fig.show="hold", out.width="50%"}
+lm2 = lm(W ~ V*T, data = windchill)
+avPlots(lm2, "V")
+ggplot(windchill, aes(x=V, y=lm2$res+lm2$coef[2]*V)) + 
+  geom_point() + 
+  geom_smooth(method='lm') +
+  geom_smooth(method='loess',col=2) +
+  labs(x="V", y="Residual+Component")
+```
+```{r, fig.show="hold", out.width="50%"}
+avPlots(lm2, "T")
+ggplot(windchill, aes(x=T, y=lm2$res+lm2$coef[3]*T)) + 
+  geom_point() + 
+  geom_smooth(method='lm') +
+  geom_smooth(method='loess',col=2) +
+  labs(x="T", y="Residual+Component")
+```
+It doesn't seem like the interaction term between V and T fixed the non-linearity problem in the relationship between V and W. Nonetheless, the interaction term is significant in the model:
+```{r}
+summary(lm2)
+```  
+```{r, include = FALSE}
+STEMProf = read.table("http://www.stat.uchicago.edu/~yibi/s224/data/RateSTEMprof.txt", sep="\t", header=T)
+```  
+  
+# Q4A  
+```{r}
+lmSTEM1 = lm(quality ~ clarity + easiness, data=STEMProf)
+ggplot(STEMProf, aes(x=numRaters, y=rstandard(lmSTEM1))) +
+  geom_point() +
+  ylab("Residuals") +
+  geom_hline(yintercept=0, color = "red")
+```
+There is heterogeneity of variance in the residuals depending on the number of raters for each professor in the data. From the plot above, it's clear the variance of the residuals decreases as number of raters increases.  
+  
+# Q4B  
+```{r}
+lmSTEM2 = lm(quality ~ clarity + easiness, weights=numRaters, data=STEMProf)
+ggplot(STEMProf, aes(x=numRaters, y=rstandard(lmSTEM2))) +
+  geom_point() +
+  ylab("Residuals") +
+  geom_hline(yintercept=0, color = "red")
+```
+The weights for the corresponding WLS model should be $w_i=n_i$, or in English, the number of raters for each professor (i.e. the numRaters variable). It is clear from plotting the *standardized* residuals against number of raters that the heterogeneity of variance has disappeared. We use the standardized as opposed to the raw residuals because the raw residuals do not take the weights into account.  
+  
+# Q4C  
+```{r}
+predict(lmSTEM2, data.frame(clarity = 3, easiness = 3), weights=25, interval="prediction")
+```
+```{r}
+predict(lmSTEM2, data.frame(clarity = 3, easiness = 3), weights=50, interval="prediction")
+```
+The predicted value for quality is 3.13936 for both 25 and 50 raters. The 95% prediction interval for 25 raters is 2.85495 to 3.42376 and the 95% prediction interval for 50 raters is 2.93717 to 3.34154.
+
