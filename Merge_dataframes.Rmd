@@ -1,0 +1,48 @@
+---
+title: "Merge Multiple Data Frames"
+author: "Anita Restrepo"
+date: "`r format(Sys.time(), '%b %d, %Y')`"
+output: html_document
+---
+  
+  
+ 
+  
+```{r include = FALSE}
+# ensures none of the code chunks are actually run (because non-functional
+# code snippets will not allow for knitting)
+knitr::opts_chunk$set(eval = FALSE)
+```
+  
+Libraries required:  
+```{r}
+library(plyr)
+```
+
+
+From Lindsay Alexander  
+Merge multiple dataframes (or subsets of them) by a common variable    
+  
+```{r}
+## create Merge function
+Merge <- function(x, y){
+  df <- merge(x, y, by= "common variable", all.x=TRUE, all.y=TRUE)
+  return(df)
+}
+## use Reduce to apply Merge function (which only combines two elements (i.e. 2 dfs in this case)) to multiple elements
+Merged_df <- Reduce(Merge, list(df1, df2, df3, df4, ...))
+```
+
+[About the Reduce function](https://blog.zhaw.ch/datascience/r-reduce-applys-lesser-known-brother/):  
+Applies a function (in this case the Merge function we created) to a list of elements in a stepwise process: starts with the first two elements, then does the result of those two with the third element, and so on  
+can set accumulate == TRUE to return not just the final result (in this case the total merge of all dfs) but also all intermediate results (the merge of dfs1 + 2, + 3, etc.)  
+  
+can also use the join_all() function from plyr package  
+[documentation](https://www.rdocumentation.org/packages/plyr/versions/1.8.6/topics/join_all)
+```{r}
+join_all(dfs, by = NULL, type = "left", match = "all")
+    # by = "commmon column"
+    # type = type of join (left, right, inner, full
+    # match = how to deal with duplicates in key ("first": match only first occurrence; "all": match all occurrences)
+```
+
