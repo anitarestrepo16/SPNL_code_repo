@@ -1,0 +1,44 @@
+---
+title: "Venn Diagrams"
+author: "Anita Restrepo"
+date: "`r format(Sys.time(), '%b %d, %Y')`"
+output: html_document
+---
+  
+  
+IN PROGRESS -- NEED TO CLEAN UP AND RUN TO VERIFY  
+Venn Diagrams to see how many participants in multiple subsamples overlap for each  
+  
+```{r include = FALSE}
+# ensures none of the code chunks are actually run (because non-functional
+# code snippets will not allow for knitting)
+knitr::opts_chunk$set(eval = FALSE)
+```
+  
+Libraries required:  
+```{r}
+library(VennDiagram)
+```
+
+
+Include a detailed description of the purpose of the code as well as detailed annotations explaining each line of code. Also add any external references if relevant and any other comments. The more info the better!    
+  
+```{r}
+#find overlap between dataframes
+nrow(table(intersect(Logistic_Regression$ID, linear_Regression$ID)))
+nrow(table(intersect(Logistic_Regression$ID, Logistic_Regression_with_CIS$ID)))
+nrow(table(intersect(linear_Regression$ID, Logistic_Regression_with_CIS$ID)))
+nrow(table(Reduce(intersect, list(Logistic_Regression$ID, linear_Regression$ID, Logistic_Regression_with_CIS$ID))))
+
+#Venn Diagram for sample size overlaps
+pdf(file="Samples_Venn.pdf", width = 100, height = 100)
+grid.newpage()
+draw.triple.venn(area1 = 1009, area2 = 830, area3 = 893, n12 = 830, n23 = 718, n13 = 893, 
+                 n123 = 718, category = c("Categorical Regression/\nOdds Ratios\n(N = 1009)\n", "Impairment Regressions\n(N = 830)\n", 
+                                          "Dimensional Regression\n(N = 893)\n"), lty = "solid", 
+                 fill = c("skyblue", "pink1", "mediumorchid"), col = c("skyblue", "pink1", "mediumorchid"),
+                 cex = 20, cat.cex = 20, cat.col = (c("skyblue", "pink1", "mediumorchid")), 
+                 cat.pos = c(340, 0, 20), cat.dist = c(0.03, 0.04, -0.04))
+dev.off()
+```
+
