@@ -43,6 +43,8 @@ These are mainly from Karen Smith.
   
 [Linear mixed effects models in R](https://pagepiccinini.com/r-course/lesson-6-part-1-linear-mixed-effects-models/)  
   
+[Visualizing Crossed Random Effects](https://errickson.net/stats-notes/vizrandomeffects.html)
+  
 [lme4 Tutorial](nsvandeschoot.com/tutorials/lme4/)  
   
 [Another lme4 Tutorial](http://www.rensenieuwenhuis.nl/r-sessions-16-multilevel-model-specification-lme4/)

@@ -1,0 +1,41 @@
+---
+title: "Extract Covariance Matrix from Mixed Model"
+author: "Anita Restrepo"
+date: "`r format(Sys.time(), '%b %d, %Y')`"
+output: html_document
+---
+  
+  
+Function to extract and visualize the variance-covariance matrix of a mixed model. Taken from [Visualizing Crossed Random Effects](https://errickson.net/stats-notes/vizrandomeffects.html) by Josh Errickson.    
+  
+```{r include = FALSE}
+# ensures none of the code chunks are actually run (because non-functional
+# code snippets will not allow for knitting)
+knitr::opts_chunk$set(eval = FALSE)
+```
+  
+Libraries required:  
+```{r}
+library(lme4)
+```
+
+
+The function:  
+```{r}
+rescov <- function(model, data) {
+  var.d <- crossprod(getME(model,"Lambdat"))
+  Zt <- getME(model,"Zt")
+  vr <- sigma(model)^2
+  var.b <- vr*(t(Zt) %*% var.d %*% Zt)
+  sI <- vr * Diagonal(nrow(data))
+  var.y <- var.b + sI
+  invisible(var.y)
+}
+```
+
+Using the function:  
+```{r}
+rc1 <- rescov(mod, Data)
+image(rc1)
+```
+
