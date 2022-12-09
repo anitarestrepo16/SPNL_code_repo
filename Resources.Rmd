@@ -47,7 +47,9 @@ These are mainly from Karen Smith.
   
 [lme4 Tutorial](nsvandeschoot.com/tutorials/lme4/)  
   
-[Another lme4 Tutorial](http://www.rensenieuwenhuis.nl/r-sessions-16-multilevel-model-specification-lme4/)
+[Another lme4 Tutorial](http://www.rensenieuwenhuis.nl/r-sessions-16-multilevel-model-specification-lme4/)  
+  
+[Binomial GLMM for binary outcomes](https://data.library.virginia.edu/getting-started-with-binomial-generalized-linear-mixed-models/)  
   
 ## Articles  
 [A paper on HLM](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3131138/)  
