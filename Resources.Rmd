@@ -72,14 +72,17 @@ Absolutely fantastic for visualizing effects and essential for probing interacti
   
 # Resources About Power  
   
-Also from Karen Smith.  
+[Really complete tutorial for power analysis using simr for MLMs](https://humburg.github.io/Power-Analysis/simr_power_analysis.html)  
+Also useful is the simR article *SIMR: an R package for power analysis of generalized linear mixed models by simulation*  
   
-https://www.frontiersin.org/articles/10.3389/fpsyg.2019.01067/full#T2  
+[Examples for power analysis with simr](https://cran.r-project.org/web/packages/simr/vignettes/examples.html)
   
-http://www.stats.ox.ac.uk/~snijders/PowerSampleSizeMultilevel.pdf  
+# Data Simulation  
   
-https://www.tandfonline.com/doi/full/10.1080/19345747.2011.618213  
+[From Probabilities to Log-Odds for Simulation](https://rpubs.com/clayford/741841)  
+Useful for simulating data for a logistic regression, particularly a logistic MLM.  
   
+    
 # jsPsych Resources  
   
 [jsPsych Website from Creators](https://www.jspsych.org/)  
