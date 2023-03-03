@@ -40,7 +40,7 @@ library(simr)
 ```
 
 
-# Tutorial 
+# Tutorial 1 
 ## Simulate Data & Covariates
 Following this tutorial https://humburg.github.io/Power-Analysis/simr_power_analysis.html
 
@@ -128,7 +128,6 @@ To study the effect an increase in sample size has on our ability to detect the 
 
 We can visualise the effect that varying the number of classes has on the power to detect the intervention effect by asking simr to plot a power curve.
 ```{r}
-
 #increase number of classes
 model_ext_class <- extend(model, along="class", n=20)
 model_ext_class
@@ -151,8 +150,42 @@ sim_treat_subj
 #plot
 p_curve_treat <- powerCurve(model_ext_subj, test=fcompare(y~time), within="class+treat+time", breaks=c(5,10,15,20))
 plot(p_curve_treat)
-
-
 ```
+
+# Tutorial 2  
+
+```{r}
+
+# First set up some covariates with expand.grid.
+#simulate data
+x <- 1:10
+g <- letters[1:3]
+
+X <- expand.grid(x=x, g=g)
+
+
+
+# Specify some fixed and random parameters.
+
+b <- c(2, -0.1) # fixed intercept and slope
+V1 <- 0.5 # random intercept variance
+V2 <- matrix(c(0.5,0.05,0.05,0.1), 2) # random intercept and slope variance-covariance matrix
+s <- 1 # residual standard deviation
+
+# Use the makeLmer or makeGlmer function to build an artificial lme4 object.
+
+model1 <- makeLmer(y ~ x + (1|g), fixef=b, VarCorr=V1, sigma=s, data=X)
+print(model1)
+
+
+model2 <- makeGlmer(z ~ x + (x|g), family="poisson", fixef=b, VarCorr=V2, data=X)
+print(model2)
+
+
+
+Now we have “pilot” models, which can be used with simr.
+powerSim(model1, nsim=20)
+```
+
 
 

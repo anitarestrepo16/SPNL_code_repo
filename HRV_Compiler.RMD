@@ -1,0 +1,239 @@
+---
+title: "HRV Compiler"
+author: "Emily Silver"
+date: "2023-02-20"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, message=FALSE, warning = FALSE, echo = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE)
+knitr::opts_knit$set(root.dir = "C:/Users/spnll/Desktop/Baseline/Excel/")
+knitr::knit_hooks$set(inline = function(x) {
+  x <- sprintf("%1.2f", x)
+  paste(x, collapse = ", ")
+}) #limit the number of decimal places in inline code
+```
+
+
+```{r}
+library(tidyverse)
+```
+
+This tutorial will follow a three-step approach (from https://benwhalley.github.io/just-enough-r/multiple-raw-data-files.html). 
+
+1. Put all the names of the .csv files into a dataframe.
+2. For each row in the dataframe, run a function which imports the file as a dataframe.
+3. Combine all these dataframes together.
+
+# 1. Put File Names into a Dataframe
+
+```{r}
+#list the files in the directory (they should all be named the same, with subject numbers in the name. E.g. "Baseline_1001.csv", "Baseline_1002.csv" etc.)
+##list.files creates a vector of all the files in the directory
+list.files("C:/Users/spnll/Desktop/Baseline/CSV")
+
+#turn the vector into a column in a new dataframe
+raw.files <- data_frame(filename = list.files("C:/Users/spnll/Desktop/Baseline/CSV/"))
+
+
+#make a new column with the complete path using the paste0 which combines strings of text
+raw.file.paths <- raw.files  %>%
+  mutate(filepath = paste0("C:/Users/spnll/Desktop/Baseline/CSV/", filename))
+
+raw.file.paths %>%
+  head(3)
+```
+
+# 2. Import the Data Files into the Dataframe
+
+The do() function allows us to run any R function for each group or row in a dataframe.
+```{r}
+
+raw.data <- raw.file.paths %>%
+  # 'do' the function for each row in turn
+  rowwise() %>%
+  do(., read_csv(file=.$filepath))
+
+
+
+read.csv.and.add.filename <- function(filepath){
+  read_csv(filepath) %>%
+    mutate(filepath=filepath)
+}
+
+raw.data.with.paths <- raw.file.paths %>%
+  rowwise() %>%
+  do(., read.csv.and.add.filename(.$filepath))
+```
+
+
+```{r}
+df <- raw.data.with.paths %>% filter(`Segment Number` == "RSA")
+df_paths <- df %>% select(filepath)
+df_no_paths <- df %>% select(-c(`Segment Number`, filepath))
+df_no_paths <- as.numeric(unlist(df_no_paths))
+df_no_paths$RSA_ave <- rowMeans(df_no_paths)
+unlist(df_no_paths[1,1])
+```
+
+# Option 2: Github Tutorial
+https://kzee.github.io/AggregatePhysio_Demo.html
+```{r}
+library(dplyr)
+library(stringr)
+numextract <- function(string){str_extract(string, "\\-*\\d+\\.*\\d*")} 
+
+mw <- function (filename) {
+    require(readxl)
+    require(stringr)
+    d <- read_excel(filename)
+    names(d) <- NULL
+    newd <- data.frame(
+      time =  t(as.vector(d[36, 2:ncol(d)])) %>% as.numeric(), 
+      hr = t(as.vector((d[37, 2:ncol(d)]))) %>% as.numeric(),
+      rsa  = t(as.vector(d[38, 2:ncol(d)])) %>% as.numeric(),
+      ibi  = t(as.vector(d[39, 2:ncol(d)])) %>% as.numeric(), 
+      rmssd = t(as.vector(d[52, 2:ncol(d)])) %>% as.numeric(), 
+      rrate  = t(as.vector(d[45, 2:ncol(d)]))%>% as.numeric(), 
+      ramp  = t(as.vector(d[46, 2:ncol(d)])) %>% as.numeric(),
+      id = numextract(filename) %>% as.numeric())
+    newd <- subset(newd, is.na(time) == F)
+  }
+
+#Test it out
+test_mwfile <- mw("baseline_1073.xlsx")
+head(test_mwfile)
+```
+
+
+```{r}
+mw <- function (filename) {
+    require(readxl)
+  require(magrittr)
+    d <- read_excel(filename)
+    names(d) <- NULL
+    newd <- data.frame(
+      row =  t(as.vector(d[6, 2:ncol(d)])) %>% as.numeric(), 
+      video =  t(as.vector(d[3, 2:ncol(d)])) ,
+      id = filename)
+    newd <- subset(newd, is.na(time) == F)
+  }
+
+testmw = mw("baseline_1006.xlsx")
+head(testmw)
+
+
+library(magrittr)
+library(foreach)
+library(plyr)
+
+setwd("C:/Users/spnll/Desktop/Baseline/Excel/")
+
+
+my_physio_data <- do.call("rbind", lapply(list.files(pattern="*.xlsx"), mw))
+```
+
+# ChatGPT
+```{r}
+library(readxl)
+library(dplyr)
+
+# set the directory where the participant files are located
+data_dir <- "C:/Users/spnll/Desktop/Baseline/Excel/"
+
+# get a list of all participant files in the directory
+participant_files <- list.files(data_dir, pattern = ".xlsx", full.names = TRUE)
+
+# create an empty data frame to store the extracted data
+data <- data.frame()
+
+# loop through each participant file
+for (i in 1:length(participant_files)) {
+  
+  # read in the participant file
+  file <- participant_files[i]
+  participant_data <- read.xlsx(file, sheet = 1, startRow = 1, colNames = TRUE)
+  
+  # extract the participant ID from the file name
+  participant_id <- gsub(".xlsx", "", basename(file))
+  
+  # extract the RSA, HR, and Respiration data for each segment
+  for (j in 1:nrow(participant_data)) {
+# read in the participant file
+  file <- participant_files[i]
+  participant_data <- read.xlsx(file, sheet = 1, startRow = 1, colNames = TRUE)
+  
+  # extract the participant ID from the file name
+  participant_id <- gsub(".xlsx", "", basename(file))
+  
+  # extract the RSA, HR, and Respiration data for each segment
+  for (j in 1:nrow(participant_data)) {
+    
+    # extract the segment number
+    segment <- participant_data[j, "Segment"]
+    
+    # calculate the start and end times based on the segment number
+    time_duration <- # calculate the time duration for each segment based on previous and current rows
+    start_time <- # calculate the start time for the current segment based on previous row
+    end_time <- # calculate the end time for the current segment based on current row
+    
+    # extract the RSA, HR, and Respiration data for the current segment
+    rsa <- participant_data[j, "RSA"]
+    hr <- participant_data[j, "HR"]
+    respiration <- participant_data[j, "Respiration"]
+    
+    # create a data frame with the extracted data
+    segment_data <- data.frame(participant_id = participant_id, segment = segment, start_time = start_time, end_time = end_time, rsa = rsa, hr = hr, respiration = respiration)
+    
+    # append the segment data to the overall data frame
+    data <- rbind(data, segment_data)
+  }
+}
+
+# write the extracted data to a CSV file
+write.csv(data, file = "path/to/output/file.csv", row.names = FALSE)
+```
+
+# Chat GPT and GitHub Code
+```{r}
+
+library(dplyr)
+library(stringr)
+library(plyr)
+library(foreach)
+
+setwd("C:/Users/spnll/Desktop/Baseline/Excel/")
+
+numextract <- function(string){ 
+  str_extract(string, "\\-*\\d+\\.*\\d*")
+} 
+
+mw <- function (filename) {
+    require(readxl)
+    require(stringr)
+    d <- read_excel(filename)
+    names(d) <- NULL
+    newd <- data.frame(
+      time =  t(as.vector(d[36, 2:ncol(d)])) %>% as.numeric(), 
+      hr = t(as.vector((d[37, 2:ncol(d)]))) %>% as.numeric(),
+      rsa  = t(as.vector(d[38, 2:ncol(d)])) %>% as.numeric(),
+      ibi  = t(as.vector(d[39, 2:ncol(d)])) %>% as.numeric(), 
+      rmssd = t(as.vector(d[52, 2:ncol(d)])) %>% as.numeric(), 
+      rrate  = t(as.vector(d[45, 2:ncol(d)]))%>% as.numeric(), 
+      ramp  = t(as.vector(d[46, 2:ncol(d)])) %>% as.numeric(),
+      id = numextract(filename) %>% as.numeric())
+    newd <- subset(newd, is.na(time) == F)
+    return(newd)  # add this line to return the extracted variables as a data frame
+}
+
+test_mwfile <- mw("baseline_1006.xlsx")
+head(test_mwfile)
+
+my_physio_data <- ldply(.data = list.files(pattern="*.xlsx"),
+              .fun = mw,
+              .parallel = TRUE) 
+```
+
