@@ -1,22 +1,33 @@
 library(tidyverse)
 library(readxl)
 
-vars_to_keep = c("RSA", "RMSSD")
 
-# save current directory
-files_dir <- paste0(getwd(), '/Mindware Compilers/HRV_data/')
-
-# obtain the HRV excel file names from the "HRV_data" folder
-files = list(list.files(files_dir))
-
-
-for(file in files){
-  id = str_replace(file, ".xlsx", "")
-  df = read_excel(paste0(files_dir, file)) %>%
-    filter(`Segment Number` %in% vars_to_keep)
-  df2 = as_tibble(t(df))[2:nrow(df2), ]
-  names(df2) = vars_to_keep
-  df2$Segment = c(seq(1, nrow(df2)))
-  df2$id = id
+compile <- function(directory = getwd(), vars_to_keep = c("RSA", "RMSSD")) {
+  directory = paste0(directory, "/")
+  # obtain the excel file names
+  files = list(list.files(directory, pattern = "*.xlsx$"))
   
+  # extract data for each excel file
+  df_out <- data.frame(matrix(ncol = (length(vars_to_keep) + 2), nrow = 0))
+  colnames(df_out) <- c(vars_to_keep, "Segment", "id")
+  for(file in files){
+    # save file name as id 
+    ID <- str_replace(file, ".xlsx", "")
+    # read in the file
+    df <- read_excel(paste0(directory, file)) %>%
+      # keep only relevant variables
+      filter(`Segment Number` %in% vars_to_keep)
+    # transpose the df
+    df2 <- as_tibble(t(df))[2:nrow(t(df)), ]
+    # change column names
+    names(df2) <- vars_to_keep
+    # add a column for segment number
+    df2$Segment <- c(seq(1, nrow(df2)))
+    # add id column
+    df2$ID <- ID
+    # append the subject data to the final df
+    df_out = rbind(df_out, df2)
+  }
+  return(df_out)
 }
+
