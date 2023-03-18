@@ -2,7 +2,7 @@ library(tidyverse)
 library(readxl)
 
 
-compile <- function(directory = getwd(), vars_to_keep = c("RSA", "RMSSD")) {
+compile <- function(directory = getwd(), vars_to_keep = c("PEP")) {
   directory = paste0(directory, "/")
   # obtain the excel file names
   files = list(list.files(directory, pattern = "*.xlsx$"))
