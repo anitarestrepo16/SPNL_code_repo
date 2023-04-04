@@ -12,7 +12,7 @@ compile <- function(directory = getwd(), vars_to_keep = c("Segment Number", "RSA
   colnames(df_out) <- c(vars_to_keep, "ID")
   for(file in files){
     # save file name as id 
-    ID <- str_replace(file, ".xlsx", "")
+    filename <- str_replace(file, ".xlsx", "")
     # read in the file
     df1 <- read_excel(paste0(directory, file)) 
     # filter the file
@@ -24,7 +24,7 @@ compile <- function(directory = getwd(), vars_to_keep = c("Segment Number", "RSA
     # change column names
     names(df3) <- vars_to_keep
     # add id column
-    df3$ID <- ID
+    df3$filename <- filename
     # append the subject data to the final df
     df_out = rbind(df_out, df3)
   }
