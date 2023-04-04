@@ -2,7 +2,7 @@ library(tidyverse)
 library(readxl)
 
 
-compile <- function(directory = getwd(), vars_to_keep = c("Segment Number", "Start Event Name", "Start Time", "End Event Name", "End Time", "Total SCRs", "ER-SCRs", "NS-SCRs", "Tonic SCL", "Mean SC")) {
+compile <- function(directory = getwd(), vars_to_keep = c("Segment Number", "RSA", "RMSSD")) {
   directory = paste0(directory, "/")
   # obtain the excel file names
   files = c(list.files(directory, pattern = "*.xlsx$"))
@@ -30,4 +30,3 @@ compile <- function(directory = getwd(), vars_to_keep = c("Segment Number", "Sta
   }
   return(df_out)
 }
-
