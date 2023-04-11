@@ -1,0 +1,18 @@
+---
+title: "kelly_test"
+output: html_document
+date: "2023-04-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+source("../HRV_compiler.R")
+```
+
+```{r}
+df <- compile(vars_to_keep = c("Respiration Rate", "Mean IBI"))
+```
+
