@@ -9,9 +9,9 @@ compile <- function(directory = getwd(), vars_to_keep = c("Segment Number", "RSA
   
   # extract data for each excel file
   df_out <- data.frame(matrix(ncol = (length(vars_to_keep) + 1), nrow = 0))
-  colnames(df_out) <- c(vars_to_keep, "ID")
+  colnames(df_out) <- c(vars_to_keep, "filename")
   for(file in files){
-    # save file name as id 
+    # save file name
     filename <- str_replace(file, ".xlsx", "")
     # read in the file
     df1 <- read_excel(paste0(directory, file)) 
@@ -22,7 +22,7 @@ compile <- function(directory = getwd(), vars_to_keep = c("Segment Number", "RSA
     # transpose the df
     df3 <- as_tibble(t(df2))[3:nrow(t(df2)), ]
     # change column names
-    names(df3) <- vars_to_keep
+    names(df3) <- as_tibble(t(df2))[1,]
     # add id column
     df3$filename <- filename
     # append the subject data to the final df

@@ -20,7 +20,6 @@ compile <- function(directory = getwd(), vars_to_keep = c("RSA", "RMSSD")) {
     # transpose the df
     df2 <- as_tibble(t(df))[2:nrow(t(df)), ]
     # change column names
-    #names(df2) <- vars_to_keep
     names(df2) <- as_tibble(t(df))[1,]
     # add a column for segment number
     df2$Segment <- c(seq(1, nrow(df2)))

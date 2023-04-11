@@ -9,10 +9,10 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-source("../HRV_compiler.R")
+source("../HRV_compiler_3.1.5.R")
 ```
 
 ```{r}
-df <- compile(vars_to_keep = c("Respiration Rate", "Mean IBI"))
+df <- compile(directory = "3.1.5", vars_to_keep = c("Respiration Rate", "Mean IBI"))
 ```
 
