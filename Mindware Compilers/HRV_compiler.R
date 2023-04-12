@@ -23,7 +23,7 @@ compile <- function(directory = getwd(), vars_to_keep = c("RSA", "RMSSD")) {
     names(df2) <- as_tibble(t(df))[1,]
     # add a column for segment number
     df2$Segment <- c(seq(1, nrow(df2)))
-    # add id column
+    # add filename column
     df2$filename <- filename
     # append the subject data to the final df
     df_out = rbind(df_out, df2)

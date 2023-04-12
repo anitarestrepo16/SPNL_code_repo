@@ -31,7 +31,6 @@ compile <- function(directory = getwd(), vars_to_keep = c("Segment Number", "Sta
         index = index + 1
       }
     }
-    
     # filter the file
     df2 <- df[index:nrow(df), ] %>%
       # keep only relevant variables
@@ -40,7 +39,7 @@ compile <- function(directory = getwd(), vars_to_keep = c("Segment Number", "Sta
     df3 <- as_tibble(t(df2))[2:nrow(t(df2)), ]
     # change column names
     names(df3) <- as_tibble(t(df2))[1,]
-    # add id column
+    # add filename column
     df3$filename <- filename
     # append the subject data to the final df
     df_out = rbind(df_out, df3)
