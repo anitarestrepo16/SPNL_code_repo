@@ -13,6 +13,26 @@ source("../HRV_compiler_3.1.5.R")
 ```
 
 ```{r}
-df <- compile(directory = "3.1.5", vars_to_keep = c("Respiration Rate", "Mean IBI"))
+df <- compile(directory = "3.1.5", vars_to_keep = c("RSA"))
+```
+
+```{r}
+directory <- paste0(getwd(), "/3.1.5/")
+file <- "105_bsl_0_HRV Analysis_1_05_42 PM.xlsx"
+df <- read_excel(paste0(directory, file))
+```
+```{r}
+df <- df %>%
+  filter(!is.na(Version))
+index = 1
+for (row in df$Version) {
+  print(row)
+  if (row == "Segment Number") {
+    break
+  } else {
+    index = index + 1
+  }
+}
+index
 ```
 
